@@ -1,0 +1,10 @@
+# Block node_modules globally in any folder level
+**/node_modules/
+node_modules/
+
+# Block environment secrets
+**/.env
+.env
+
+# Block mobile service credentials
+**/google-services*.json
