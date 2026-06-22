@@ -18,32 +18,28 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return distance;
 }
 
-// 🚖 2. POST Route: Process booking request, compute dynamic fare, and allocate driver
+// 🚖 2. POST Route: Process booking request, compute dynamic fare, and broadcast via WebSockets
 router.post('/request-ride', async (req, res) => {
-  // Destructure incoming data safely
   const { passengerId, pickupLocation, dropoffLocation, vehicleType } = req.body;
 
   console.log(`\n🚖 [Ride Engine] New request received from Passenger ID: ${passengerId}`);
 
   try {
-    // Safety check: Ensure structural coordinates exist so the app doesn't throw 'undefined'
     const pickupLat = pickupLocation?.latitude;
     const pickupLon = pickupLocation?.longitude;
     const dropoffLat = dropoffLocation?.latitude;
     const dropoffLon = dropoffLocation?.longitude;
     
-    // Fallback default choice if vehicleType is missing from the payload
     const selectedVehicle = vehicleType || 'Velo Go'; 
 
     // 🧠 Step A: Dynamic Distance & Fare Matrix Engine Calculation
     const distanceKm = calculateDistance(pickupLat, pickupLon, dropoffLat, dropoffLon);
     console.log(`📏 Calculated Trip Distance: ${distanceKm.toFixed(2)} km`);
 
-    let ratePerKm = 15; // Base price rate per km for Velo Go
+    let ratePerKm = 15; 
     if (selectedVehicle === 'Velo Plus') ratePerKm = 22;
     if (selectedVehicle === 'Velo XL') ratePerKm = 30;
 
-    // Base Booking Charge (e.g., 50 INR) + Distance pricing cost
     const computedFare = Math.round(50 + (distanceKm * ratePerKm));
     console.log(`💰 Dynamic Fare Generated: ₹${computedFare} for tier [${selectedVehicle}]`);
 
@@ -61,46 +57,32 @@ router.post('/request-ride', async (req, res) => {
         longitude: dropoffLon || 77.2177
       },
       fare: computedFare,
-      status: 'SEARCHING'
+      status: 'SEARCHING' 
     });
 
     await newRide.save();
     console.log(`💾 [Database] Saved pending ride with ID: ${newRide._id}`);
 
-    // 🎯 Step C: Target Allocation Matching Engine
-    // Looks for a driver that is online/available
-    const availableDriver = await Driver.findOne({ isAvailable: true });
+    // 🎯 Step C: Target Allocation & Real-Time Broadcast Layer
+    const io = req.app.get('io');
 
-    if (!availableDriver) {
-      console.log(`⚠️ [Ride Engine] No drivers available in the area right now.`);
-      return res.status(200).json({
-        success: true,
-        message: `Ride booked for ₹${computedFare}. Searching for online drivers...`,
-        ride: newRide
+    if (io) {
+      console.log(`📡 [Socket Engine] Broadcasting incoming trip booking request to driver network streams...`);
+      
+      io.to('drivers-room').emit('incoming-ride-request', {
+        rideId: newRide._id,
+        passengerId: newRide.passengerId,
+        pickup: newRide.pickupLocation,
+        dropoff: newRide.dropoffLocation,
+        fare: newRide.fare,
+        vehicleType: selectedVehicle
       });
     }
 
-    // 🔗 Step D: Handshake Lifecycle - Bind Passenger Trip to Available Driver
-    newRide.driverId = availableDriver._id;
-    newRide.status = 'ACCEPTED';
-    await newRide.save();
-
-    // Toggle driver state to false so they don't look available to other bookings
-    availableDriver.isAvailable = false;
-    await availableDriver.save();
-
-    console.log(`✨ [Ride Engine] Trip ${newRide._id} matched with Driver: ${availableDriver.fullname}`);
-
-    // 📲 Step E: Send success payload with real computed parameters back to client UI
     return res.status(200).json({
       success: true,
-      message: 'Driver found and matched successfully!',
-      ride: newRide,
-      driver: {
-        fullname: availableDriver.fullname,
-        phone: availableDriver.phone,
-        vehicle: availableDriver.vehicleDetails
-      }
+      message: `Ride request posted for ₹${computedFare}. Searching for available local drivers...`,
+      ride: newRide
     });
 
   } catch (error) {
@@ -110,6 +92,107 @@ router.post('/request-ride', async (req, res) => {
       message: 'Internal server error processing trip requests.',
       error: error.message 
     });
+  }
+});
+
+// 📊 3. GET/POST Route: Get fare estimates for all tiers before booking
+router.post('/estimate-fares', (req, res) => {
+  const { pickupLocation, dropoffLocation } = req.body;
+
+  try {
+    const pickupLat = pickupLocation?.latitude;
+    const pickupLon = pickupLocation?.longitude;
+    const dropoffLat = dropoffLocation?.latitude;
+    const dropoffLon = dropoffLocation?.longitude;
+
+    const distanceKm = calculateDistance(pickupLat, pickupLon, dropoffLat, dropoffLon);
+
+    const estimates = {
+      "Velo Go": Math.round(50 + (distanceKm * 15)),   
+      "Velo Plus": Math.round(50 + (distanceKm * 22)), 
+      "Velo XL": Math.round(50 + (distanceKm * 30))    
+    };
+
+    return res.status(200).json({
+      success: true,
+      distance: distanceKm,
+      estimates
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🚗 4. GET Route: Fetch all active, available drivers to display as idle cars on the map
+router.get('/nearby-drivers', async (req, res) => {
+  try {
+    const activeDrivers = await Driver.find({ isAvailable: true });
+    console.log(`📡 [Ride Engine] Fetched ${activeDrivers.length} active idle drivers for the map view.`);
+    
+    return res.status(200).json({
+      success: true,
+      drivers: activeDrivers
+    });
+  } catch (error) {
+    console.error("❌ Error fetching nearby drivers:", error.message);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch background vehicles.',
+      error: error.message 
+    });
+  }
+});
+
+// 🚖 5. POST Route: Simulate a driver accepting the active ride via WebSockets
+router.post('/accept-ride', async (req, res) => {
+  const { rideId, driverId } = req.body;
+
+  try {
+    // 1. Find the ride request document
+    const ride = await Ride.findById(rideId);
+    if (!ride) return res.status(404).json({ success: false, message: "Ride not found" });
+
+    // 2. Find the mock driver profile
+    const driver = await Driver.findById(driverId);
+    if (!driver) return res.status(404).json({ success: false, message: "Driver not found" });
+
+    // 3. Update the state mapping rules
+    ride.status = 'ACCEPTED';
+    ride.driverId = driver._id;
+    await ride.save();
+
+    // 4. Temporarily flag driver status as unavailable on the map view
+    driver.isAvailable = false;
+    await driver.save();
+
+    // 5. 🔥 NOTIFY CLIENT REAL-TIME FLOW VIA WEB-SOCKETS INSTANTLY
+    const io = req.app.get('io');
+    if (io) {
+      console.log(`✨ [Socket Engine] Notifying passenger that Driver ${driver.fullname} accepted trip ${rideId}`);
+      
+      // Target the specific passenger channel streaming matching this ride ID code setup
+      io.emit(`ride-update-${rideId}`, {
+        status: 'ACCEPTED',
+        driver: {
+          fullname: driver.fullname,
+          phone: driver.phone,
+          vehicle: driver.vehicleDetails || {
+            carModel: driver.vehicle?.carModel || "Maruti Suzuki Swift",
+            plateNumber: driver.vehicle?.plateNumber || "DL 3C AY 4412",
+            color: driver.vehicle?.color || "White"
+          }
+        }
+      });
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Simulation: Ride accepted successfully!", 
+      ride 
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
