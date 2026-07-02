@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios'); 
-
-const User = require('../models/User'); 
+const User = require('../models/user'); 
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY; 
 
 // POST Route to send OTP
+
 router.post('/send-otp', async (req, res) => {
   const { phoneNumber } = req.body; 
   console.log(`\n📲 [Send OTP] Incoming request for: ${phoneNumber}`);
+
 
   try {
     const response = await axios.post(

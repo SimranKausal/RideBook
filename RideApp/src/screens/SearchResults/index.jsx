@@ -35,7 +35,7 @@ const SearchResults = () => {
 
   // 📡 Socket.io Listener Hook
   useEffect(() => {
-    const socket = io('http://10.0.2.2:5000'); // Connects to your Node backend wrapper
+    const socket = io('http://4.240.25.27:5000'); // Connects to your Node backend wrapper
 
     if (currentRideId) {
       console.log(`📡 [Socket] Listening for updates on Ride: ${currentRideId}`);
@@ -60,7 +60,7 @@ const SearchResults = () => {
     if (!currentRideId) return;
 
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/rides/accept-ride', {
+      const response = await fetch('http://4.240.25.27:5000/api/rides/accept-ride', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
