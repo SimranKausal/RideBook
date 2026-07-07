@@ -45,6 +45,18 @@ io.on('connection', (socket) => {
         console.log(`🚖 [Socket Engine] A driver asset just registered into the active stream.`);
     });
 
+    // Listener: Client joins a private room for an active ride (for chat and live ETA)
+    socket.on('join-ride-room', ({ rideId }) => {
+        socket.join(`ride-room-${rideId}`);
+        console.log(`📡 [Socket Engine] Client joined private room: ride-room-${rideId}`);
+    });
+
+    // Listener: Relays quick-chat messages between passenger and driver
+    socket.on('send-message', ({ rideId, text, senderId }) => {
+        console.log(`💬 [Socket Chat] Relaying message on Ride ${rideId}: "${text}"`);
+        io.to(`ride-room-${rideId}`).emit(`new-message-${rideId}`, { text, senderId });
+    });
+
     // Listener: Handlers for disconnection cleanups
     socket.on('disconnect', () => {
         console.log(`🔌 [Socket Engine] Client disconnected from system pipeline.`);

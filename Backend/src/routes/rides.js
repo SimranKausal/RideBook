@@ -40,8 +40,26 @@ router.post('/request-ride', async (req, res) => {
     if (selectedVehicle === 'Velo Plus') ratePerKm = 22;
     if (selectedVehicle === 'Velo XL') ratePerKm = 30;
 
-    const computedFare = Math.round(50 + (distanceKm * ratePerKm));
+    // ⚡ Calculate Surge Multiplier (Peak Hours or Weather)
+    let surgeMultiplier = 1.0;
+    const utcHour = new Date().getUTCHours();
+    const indiaHour = (utcHour + 5.5) % 24; // India local hour (UTC + 5:30)
+    
+    if (indiaHour >= 17 && indiaHour <= 20) {
+      surgeMultiplier = 1.3; // 1.3x during 5pm to 8pm
+      console.log(`⚡ [Surge Engine] Peak Hours Surge Active (1.3x)`);
+    }
+    
+    if (req.body.weather === 'rain') {
+      surgeMultiplier = 1.5; // 1.5x during rain
+      console.log(`🌧️ [Surge Engine] Weather Rain Surge Active (1.5x)`);
+    }
+
+    const computedFare = Math.round((50 + (distanceKm * ratePerKm)) * surgeMultiplier);
     console.log(`💰 Dynamic Fare Generated: ₹${computedFare} for tier [${selectedVehicle}]`);
+
+    // Generate a random 4-digit start OTP
+    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
 
     // 📝 Step B: Instantiate and register the Ride Entry into MongoDB Atlas
     const newRide = new Ride({
@@ -57,7 +75,8 @@ router.post('/request-ride', async (req, res) => {
         longitude: dropoffLon || 77.2177
       },
       fare: computedFare,
-      status: 'SEARCHING' 
+      status: 'SEARCHING',
+      startOtp: randomOtp
     });
 
     await newRide.save();
@@ -97,7 +116,7 @@ router.post('/request-ride', async (req, res) => {
 
 // 📊 3. GET/POST Route: Get fare estimates for all tiers before booking
 router.post('/estimate-fares', (req, res) => {
-  const { pickupLocation, dropoffLocation } = req.body;
+  const { pickupLocation, dropoffLocation, weather } = req.body;
 
   try {
     const pickupLat = pickupLocation?.latitude;
@@ -107,10 +126,22 @@ router.post('/estimate-fares', (req, res) => {
 
     const distanceKm = calculateDistance(pickupLat, pickupLon, dropoffLat, dropoffLon);
 
+    // ⚡ Calculate Surge Multiplier
+    let surgeMultiplier = 1.0;
+    const utcHour = new Date().getUTCHours();
+    const indiaHour = (utcHour + 5.5) % 24; // India local hour (UTC + 5:30)
+    
+    if (indiaHour >= 17 && indiaHour <= 20) {
+      surgeMultiplier = 1.3;
+    }
+    if (weather === 'rain') {
+      surgeMultiplier = 1.5;
+    }
+
     const estimates = {
-      "Velo Go": Math.round(50 + (distanceKm * 15)),   
-      "Velo Plus": Math.round(50 + (distanceKm * 22)), 
-      "Velo XL": Math.round(50 + (distanceKm * 30))    
+      "Velo Go": Math.round((50 + (distanceKm * 15)) * surgeMultiplier),   
+      "Velo Plus": Math.round((50 + (distanceKm * 22)) * surgeMultiplier), 
+      "Velo XL": Math.round((50 + (distanceKm * 30)) * surgeMultiplier)    
     };
 
     return res.status(200).json({
@@ -230,6 +261,103 @@ router.post('/complete-ride', async (req, res) => {
       ride
     });
 
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🚖 7. POST Route: Start a ride by verifying OTP
+router.post('/start-ride', async (req, res) => {
+  const { rideId, otp } = req.body;
+  console.log(`🔑 [Start Ride] Verifying start OTP: ${otp} for Ride ID: ${rideId}`);
+
+  try {
+    const ride = await Ride.findById(rideId);
+    if (!ride) return res.status(404).json({ success: false, message: "Ride not found" });
+
+    if (ride.startOtp !== otp) {
+      console.log(`❌ [Start Ride] Mismatched OTP. Got ${otp}, expected ${ride.startOtp}`);
+      return res.status(400).json({ success: false, message: "Invalid Start OTP. Please check passenger screen." });
+    }
+
+    ride.status = 'ON_TRIP';
+    await ride.save();
+
+    // Notify passenger app in real-time
+    const io = req.app.get('io');
+    if (io) {
+      console.log(`✨ [Socket Engine] Notifying passenger that Ride ${rideId} is ON_TRIP`);
+      io.emit(`ride-update-${rideId}`, {
+        status: 'ON_TRIP'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ride started successfully! Proceed to destination.",
+      ride
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ❌ 8. POST Route: Cancel an active ride request or booking
+router.post('/cancel-ride', async (req, res) => {
+  const { rideId, canceller } = req.body;
+  console.log(`❌ [Ride Engine] Cancellation request for Ride ID: ${rideId} by: ${canceller}`);
+
+  try {
+    const ride = await Ride.findById(rideId);
+    if (!ride) return res.status(404).json({ success: false, message: "Ride not found" });
+
+    ride.status = 'CANCELLED';
+    await ride.save();
+
+    // If a driver accepted it, make them available again
+    if (ride.driverId) {
+      await Driver.findByIdAndUpdate(ride.driverId, { isAvailable: true });
+    }
+
+    // Broadcast cancellation to socket listeners
+    const io = req.app.get('io');
+    if (io) {
+      console.log(`✨ [Socket Engine] Notifying passengers & drivers that Ride ${rideId} is CANCELLED`);
+      io.emit(`ride-update-${rideId}`, {
+        status: 'CANCELLED'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ride cancelled successfully.",
+      ride
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 📊 9. GET Route: Fetch past trip history for a driver or passenger
+router.get('/trips/history/:id', async (req, res) => {
+  const entityId = req.params.id;
+  console.log(`📊 [Ride Engine] Fetching trip history for Entity ID: ${entityId}`);
+
+  try {
+    const trips = await Ride.find({
+      $or: [
+        { passengerId: entityId },
+        { driverId: entityId }
+      ],
+      status: 'COMPLETED'
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      trips
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

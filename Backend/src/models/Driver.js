@@ -13,7 +13,8 @@ const DriverSchema = new mongoose.Schema({
     latitude: { type: Number, default: 28.6448 },  // Defaults near Daryaganj/Delhi
     longitude: { type: Number, default: 77.2403 }
   },
-  isAvailable: { type: Boolean, default: true }     // Toggle for matching engine
+  isAvailable: { type: Boolean, default: true },     // Toggle for matching engine
+  profilePhoto: { type: String, default: "avatar_1" } // Selected driver avatar
 }, { timestamps: true });
 
 module.exports = mongoose.models.Driver || mongoose.model('Driver', DriverSchema);

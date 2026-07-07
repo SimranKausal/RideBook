@@ -29,7 +29,16 @@ const RideSchema = new mongoose.Schema({
     type: String,
     enum: ['SEARCHING', 'ACCEPTED', 'ON_TRIP', 'COMPLETED', 'CANCELLED'],
     default: 'SEARCHING'
-  }
+  },
+  startOtp: {
+    type: String,
+    default: ""
+  },
+  messages: [{
+    senderId: { type: String },
+    text: { type: String },
+    timestamp: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Ride', RideSchema);
