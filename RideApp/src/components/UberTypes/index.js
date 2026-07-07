@@ -56,7 +56,7 @@ const UberTypes = (props) => {
 
     try {
       console.log(`🚖 Requesting allocation for: ${selectedType}`);
-      const response = await axios.post('http://10.0.2.2:5000/api/rides/request-ride', ridePayload);
+      const response = await axios.post('http://4.240.25.27:5000/api/rides/request-ride', ridePayload);
 
       if (response.data.success) {
         const { ride, driver } = response.data; 

@@ -1,15 +1,27 @@
-import { View, Text , Dimensions} from 'react-native'
-import HomeMap from '../../components/HomeMap/index'
-import HomeSearch from "../../components/HomeSearch"
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import HomeMap from '../../components/HomeMap/index';
+import HomeSearch from "../../components/HomeSearch";
 
 const HomeScreen = () => {
   return (
-    <View>
-    <View style = {{height: Dimensions.get('window').height-400}}>
-      <HomeMap/>
+    <View style={styles.container}>
+      <View style={styles.mapContainer}>
+        <HomeMap />
       </View>
-      <HomeSearch/>
+      <HomeSearch />
     </View>
-  )
-}
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0F172A', // Slate-900 matching
+  },
+  mapContainer: {
+    flex: 1,
+  },
+});
+
 export default HomeScreen;

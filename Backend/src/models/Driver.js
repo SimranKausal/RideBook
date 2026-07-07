@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const DriverSchema = new mongoose.Schema({
-  fullname: { type: String, required: true },
+  fullname: { type: String, default: "" },
   phone: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, default: "" },
   vehicleDetails: {
-    carModel: { type: String, required: true },    // e.g., "Suzuki WagonR"
-    plateNumber: { type: String, required: true }, // e.g., "DL 1C XX 1234"
-    color: { type: String, required: true }
+    carModel: { type: String, default: "" },
+    plateNumber: { type: String, default: "" },
+    color: { type: String, default: "" }
   },
   currentLocation: {
     latitude: { type: Number, default: 28.6448 },  // Defaults near Daryaganj/Delhi
@@ -16,4 +16,4 @@ const DriverSchema = new mongoose.Schema({
   isAvailable: { type: Boolean, default: true }     // Toggle for matching engine
 }, { timestamps: true });
 
-module.exports = mongoose.model('Driver', DriverSchema);
+module.exports = mongoose.models.Driver || mongoose.model('Driver', DriverSchema);

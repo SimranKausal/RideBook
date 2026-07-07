@@ -1,0 +1,23 @@
+Jira Epic / Task ID,Task Name,Estimated Time (Days),Actual Time Spent (Days),Status,Completion Date,Description
+EPIC 1: Rider App UI & Features Makeover,,,,,,
+RB-1,Professional Animated Splash Screen,1,1,Done,2026-07-03,Fade-in spring scale zoom-in and delayed tagline fade.
+RB-2,Rider App UI Makeover & Home Search,2,2,Done,2026-07-03,Sleek home layout premium floating search card and location rows.
+RB-3,"My Bookings" Screen,1,0,To Do,N/A,Ride history listing screen in Rider App drawer.
+RB-4,"Book for Later" UI,1,0,To Do,N/A,Date-time selector inside ride bookings sheet.
+,,,,,,
+EPIC 2: Backend Database Extensions & Schedulers,,,,,,
+RB-5,Scheduled Ride Database Schema,1,0,To Do,N/A,Mongoose database model update for scheduled rides.
+RB-6,Cron Scheduler Service,2,0,To Do,N/A,Background daemon scheduler to dispatch upcoming bookings.
+RB-7,Trip History API,1,0,To Do,N/A,Backend APIs to fetch rider trip histories.
+,,,,,,
+EPIC 3: Driver App Foundation & GPS,,,,,,
+RB-8,Driver App Setup & Auth,2,2,Done,2026-07-03,Driver React Native CLI project setup Auth and Vehicle details.
+RB-9,Background GPS Streamer,2,2,Done,2026-07-03,Location tracking integration streaming coordinates to server.
+RB-10,Driver Map Dashboard,1,1,Done,2026-07-03,Driver map console showing location and Online toggle status.
+,,,,,,
+EPIC 4: Real-Time Integration & Launch Prep,,,,,,
+RB-11,Driver Acceptance Modal,2,2,Done,2026-07-03,Popup modal for incoming ride request with 15s countdown timer.
+RB-12,End-to-End Socket Integration,2,2,Done,2026-07-03,WebSocket link verifying communication between Rider Server and Driver.
+RB-13,QA Testing & Bug Fixing,2,0,To Do,N/A,Connectivity testing crash recovery and final delivery check.
+,,,,,,
+TOTALS,Velo RideBook Ecosystem,20,12,60% Completed,,

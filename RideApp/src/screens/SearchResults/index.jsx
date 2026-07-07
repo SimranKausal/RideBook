@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Dimensions, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import UberTypes from "../../components/UberTypes";
 import RouteMap from "../../components/RouteMap";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { io } from 'socket.io-client'; // 📡 Import Socket client
 
 // 🇮🇳 Smart baseline local coordinates to prevent structural layout calculation freezes
@@ -11,6 +11,7 @@ const DEFAULT_LNG = 77.3769;
 
 const SearchResults = () => {
   const route = useRoute();
+  const navigation = useNavigation();
   const { originPlace, destinationPlace } = route.params || {};
 
   const [isDriving, setIsDriving] = useState(false);
@@ -35,7 +36,7 @@ const SearchResults = () => {
 
   // 📡 Socket.io Listener Hook
   useEffect(() => {
-    const socket = io('http://10.0.2.2:5000'); // Connects to your Node backend wrapper
+    const socket = io('http://4.240.25.27:5000'); // Connects to your Node backend wrapper
 
     if (currentRideId) {
       console.log(`📡 [Socket] Listening for updates on Ride: ${currentRideId}`);
@@ -46,6 +47,20 @@ const SearchResults = () => {
           setRideStatus('ACCEPTED');
           setMatchedDriver(data.driver);
           setIsDriving(true); // Automatically starts your map animations!
+        } else if (data.status === 'COMPLETED') {
+          setRideStatus('COMPLETED');
+          Alert.alert(
+            "Trip Completed! 🎉",
+            `Thank you for riding with Velo!\nTotal Fare: ₹${data.fare || 0}`,
+            [
+              { 
+                text: "OK", 
+                onPress: () => {
+                  navigation.navigate('HomeScreen');
+                } 
+              }
+            ]
+          );
         }
       });
     }
@@ -53,14 +68,14 @@ const SearchResults = () => {
     return () => {
       socket.disconnect();
     };
-  }, [currentRideId]);
+  }, [currentRideId, navigation]);
 
   // 𚖖 Mock Action: Simulates the driver hitting the "Accept Request" button
   const simulateDriverAcceptance = async () => {
     if (!currentRideId) return;
 
     try {
-      const response = await fetch('http://10.0.2.2:5000/api/rides/accept-ride', {
+      const response = await fetch('http://4.240.25.27:5000/api/rides/accept-ride', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,7 +3,7 @@ import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import axios from 'axios'; 
 
 // Using the 10.0.2.2 mapping so the Android Emulator routes to your computer's local port 5000
-const API_BASE_URL = 'http://10.0.2.2:5000/api/auth'; 
+const API_BASE_URL = 'http://4.240.25.27:5000/api/auth'; 
 
 export default function AuthScreen({ navigation }) {
   const [phoneNumber, setPhoneNumber] = useState('');

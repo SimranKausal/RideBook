@@ -3,6 +3,7 @@ const router = express.Router();
 const axios = require('axios'); 
 
 const User = require('../models/User'); 
+const Driver = require('../models/Driver'); 
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY; 
 
 // POST Route to send OTP
@@ -137,6 +138,157 @@ router.put('/update-profile', async (req, res) => {
       success: false, 
       message: 'Server error updating profile.', 
       error: error.message 
+    });
+  }
+});
+
+// ==========================================
+// 🚖 DRIVER ENDPOINTS
+// ==========================================
+
+// 1. POST Route to verify Driver OTP
+router.post('/driver/verify-otp', async (req, res) => {
+  const { sessionInfo, code, phoneNumber } = req.body;
+  console.log(`\n🔑 [Driver Verify OTP] Verifying code: ${code} for phone: ${phoneNumber}`);
+
+  try {
+    // Verify the code using Firebase REST API
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=${FIREBASE_API_KEY}`,
+      { sessionInfo, code }
+    );
+
+    const { localId, idToken } = response.data;
+    console.log(`✨ [Driver Verify OTP] Firebase authenticated! UID: ${localId}`);
+
+    // Check if the driver exists in MongoDB using 'phone'
+    let driver = await Driver.findOne({ phone: phoneNumber });
+
+    if (!driver) {
+      console.log(`👤 [Database] Driver not found. Creating new driver profile...`);
+      driver = new Driver({
+        phone: phoneNumber,
+        fullname: '', // Empty until profile complete
+        email: '',
+        vehicleDetails: {
+          carModel: '',
+          plateNumber: '',
+          color: ''
+        }
+      });
+      await driver.save();
+      console.log(`💾 [Database] New driver saved successfully with ID: ${driver._id}`);
+    } else {
+      console.log(`👋 [Database] Existing driver found with ID: ${driver._id}`);
+    }
+
+    // Check if profile is complete (needs fullname, email, and carModel)
+    const isProfileComplete = !!(driver.fullname && driver.email && driver.vehicleDetails?.carModel);
+    console.log(`📋 [Profile Check] Is driver setup complete? -> ${isProfileComplete}`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Driver authentication successful',
+      driverId: driver._id,
+      isProfileComplete: isProfileComplete,
+      token: idToken
+    });
+
+  } catch (error) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    console.error(`❌ [Driver Verify OTP] Authentication Failed:`, errorMessage);
+    return res.status(400).json({
+      success: false,
+      message: 'Verification failed',
+      error: errorMessage
+    });
+  }
+});
+
+// 2. PUT Route to update Driver profile details
+router.put('/driver/update-profile', async (req, res) => {
+  const { driverId, fullname, email, vehicleDetails } = req.body;
+  console.log(`\n👤 [Driver Profile Update] Updating details for Driver ID: ${driverId}`);
+
+  if (!driverId || !fullname || !email || !vehicleDetails) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required fields: driverId, fullname, email, or vehicleDetails.'
+    });
+  }
+
+  try {
+    const updatedDriver = await Driver.findByIdAndUpdate(
+      driverId,
+      {
+        fullname,
+        email,
+        vehicleDetails
+      },
+      { new: true }
+    );
+
+    if (!updatedDriver) {
+      return res.status(404).json({ success: false, message: 'Driver not found.' });
+    }
+
+    console.log(`💾 [Database] Driver profile updated for ${updatedDriver.fullname}`);
+    return res.status(200).json({
+      success: true,
+      message: 'Driver profile completed successfully!',
+      driver: updatedDriver
+    });
+
+  } catch (error) {
+    console.error(`❌ [Driver Profile Update] Failed:`, error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error updating driver profile.',
+      error: error.message
+    });
+  }
+});
+
+// 3. PUT Route to update Driver location and availability
+router.put('/driver/update-location', async (req, res) => {
+  const { driverId, latitude, longitude, isAvailable } = req.body;
+  console.log(`\n📍 [Driver Location Update] Updating location for Driver ID: ${driverId}`);
+
+  if (!driverId) {
+    return res.status(400).json({ success: false, message: 'Missing driverId.' });
+  }
+
+  try {
+    const updateData = {};
+    if (latitude !== undefined && longitude !== undefined) {
+      updateData.currentLocation = { latitude, longitude };
+    }
+    if (isAvailable !== undefined) {
+      updateData.isAvailable = isAvailable;
+    }
+
+    const updatedDriver = await Driver.findByIdAndUpdate(
+      driverId,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedDriver) {
+      return res.status(404).json({ success: false, message: 'Driver not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Location and status updated successfully!',
+      driver: updatedDriver
+    });
+
+  } catch (error) {
+    console.error(`❌ [Driver Location Update] Failed:`, error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error updating location.',
+      error: error.message
     });
   }
 });

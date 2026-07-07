@@ -196,4 +196,43 @@ router.post('/accept-ride', async (req, res) => {
   }
 });
 
+// 🏁 6. POST Route: Complete the ride and notify passenger via WebSockets
+router.post('/complete-ride', async (req, res) => {
+  const { rideId, driverId } = req.body;
+  console.log(`\n🏁 [Ride Engine] Completing ride ID: ${rideId} for Driver ID: ${driverId}`);
+
+  try {
+    const ride = await Ride.findById(rideId);
+    if (!ride) return res.status(404).json({ success: false, message: "Ride not found" });
+
+    const driver = await Driver.findById(driverId);
+    if (!driver) return res.status(404).json({ success: false, message: "Driver not found" });
+
+    ride.status = 'COMPLETED';
+    await ride.save();
+
+    driver.isAvailable = true;
+    await driver.save();
+
+    // 📡 Notify passenger app in real-time
+    const io = req.app.get('io');
+    if (io) {
+      console.log(`✨ [Socket Engine] Notifying passenger that Ride ${rideId} is COMPLETED`);
+      io.emit(`ride-update-${rideId}`, {
+        status: 'COMPLETED',
+        fare: ride.fare
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ride completed successfully!",
+      ride
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

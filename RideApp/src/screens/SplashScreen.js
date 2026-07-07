@@ -1,30 +1,58 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Animated, Dimensions, Platform } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation }) {
-  // Animation value for fading in the logo
-  const fadeAnim = new Animated.Value(0);
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;      // Fade in the logo
+  const scaleAnim = useRef(new Animated.Value(0.4)).current;    // Zoom in the logo
+  const slideAnim = useRef(new Animated.Value(40)).current;     // Slide up the logo
+  const taglineFade = useRef(new Animated.Value(0)).current;    // Delayed fade in for tagline
+  const spinnerFade = useRef(new Animated.Value(0)).current;    // Delayed fade in for loading spinner
 
   useEffect(() => {
-    // 1. Run the logo fade-in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true,
-    }).start();
+    // 🎛️ Premium multi-stage animation sequence
+    Animated.sequence([
+      // Stage 1: Logo fades in, scales up, and slides up in parallel
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 6,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Stage 2: Tagline and loading spinner fade in smoothly right after
+      Animated.parallel([
+        Animated.timing(taglineFade, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(spinnerFade, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
 
-    // 2. Simulate an authentication token check (e.g., from AsyncStorage / SecureStore)
+    // Simulate auth token check and redirect after 3.5 seconds
     const checkAuthStatus = async () => {
-      // Temporary timeout to simulate loading app assets/checking tokens
       setTimeout(() => {
-        
-        // --- NEXT STEP LOGIC ---
-        // const token = await AsyncStorage.getItem('userToken');
-        // if (token) { navigation.replace('Home'); } else { navigation.replace('Auth'); }
-        
-        // For now, redirect straight to your working Auth screen
         navigation.replace('Auth');
-      }, 3000); // Displays splash for 3 seconds
+      }, 3500);
     };
 
     checkAuthStatus();
@@ -32,14 +60,37 @@ export default function SplashScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        {/* You can replace this Text with an <Image source={require('../assets/logo.png')} /> later */}
+      {/* Background radial-like light leak effect */}
+      <View style={styles.glowEffect} />
+
+      <Animated.View 
+        style={[
+          styles.logoContainer, 
+          { 
+            opacity: fadeAnim,
+            transform: [
+              { scale: scaleAnim },
+              { translateY: slideAnim }
+            ]
+          }
+        ]}
+      >
+        {/* Sleek, glowing brand logo icon */}
+        <View style={styles.iconCircle}>
+          <Text style={styles.iconText}>V</Text>
+        </View>
+
         <Text style={styles.logoText}>VELO</Text>
+      </Animated.View>
+
+      <Animated.View style={[styles.taglineContainer, { opacity: taglineFade }]}>
         <Text style={styles.tagline}>Your Ride, Simplified.</Text>
       </Animated.View>
 
-      {/* Loading Spinner at the bottom */}
-      <ActivityIndicator size="large" color="#ffffff" style={styles.spinner} />
+      {/* Animated Loading Spinner */}
+      <Animated.View style={[styles.spinnerContainer, { opacity: spinnerFade }]}>
+        <ActivityIndicator size="small" color="#3B82F6" />
+      </Animated.View>
     </View>
   );
 }
@@ -47,27 +98,62 @@ export default function SplashScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A', // Premium dark theme background for Velo
+    backgroundColor: '#0F172A', // Slate-900 (ultra premium deep dark blue-grey)
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  glowEffect: {
+    position: 'absolute',
+    width: width * 1.2,
+    height: width * 1.2,
+    borderRadius: (width * 1.2) / 2,
+    backgroundColor: 'rgba(59, 130, 246, 0.05)', // Extremely soft ambient blue glow
+    top: '20%',
   },
   logoContainer: {
     alignItems: 'center',
   },
+  iconCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#1E293B', // Slate-800
+    borderWidth: 2,
+    borderColor: '#3B82F6', // Electric blue ring
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    // Native shadows for premium feel
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  iconText: {
+    fontSize: 42,
+    fontWeight: '900',
+    color: '#3B82F6', // Electric blue icon character
+    fontFamily: Platform.OS === 'ios' ? 'HelveticaNeue-Bold' : 'sans-serif-condensed',
+  },
   logoText: {
-    fontSize: 48,
+    fontSize: 44,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: 4,
+    letterSpacing: 6,
+    fontFamily: Platform.OS === 'ios' ? 'HelveticaNeue-CondensedBold' : 'sans-serif-medium',
+  },
+  taglineContainer: {
+    marginTop: 15,
   },
   tagline: {
-    fontSize: 16,
-    color: '#AAAAAA',
-    marginTop: 10,
-    fontWeight: '400',
+    fontSize: 15,
+    color: '#94A3B8', // Slate-400
+    fontWeight: '500',
+    letterSpacing: 1.5,
   },
-  spinner: {
+  spinnerContainer: {
     position: 'absolute',
-    bottom: 60,
+    bottom: 80,
   },
 });

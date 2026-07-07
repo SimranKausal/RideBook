@@ -24,7 +24,7 @@ const RouteMap = ({ origin, destination }) => {
   useEffect(() => {
     const fetchMapCars = async () => {
       try {
-        const response = await fetch('http://10.0.2.2:5000/api/rides/nearby-drivers');
+        const response = await fetch('http://4.240.25.27:5000/api/rides/nearby-drivers');
         const data = await response.json();
         
         if (data.success) {

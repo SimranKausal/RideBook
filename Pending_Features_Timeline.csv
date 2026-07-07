@@ -1,0 +1,7 @@
+Task ID,Pending Feature,Epic Group,Effort (Days),Target Deadline,Description
+RB-3,"My Bookings" History Screen,Rider App UI & Features Makeover,1,2026-07-06,Screen showing rider's past/cancelled rides in the side menu.
+RB-4,"Book for Later" UI,Rider App UI & Features Makeover,1,2026-07-07,Date and Time picker integration for future scheduling.
+RB-5,Scheduled Ride Database Schema,Backend Database Extensions & Schedulers,1,2026-07-08,MongoDB model updates to support future bookings.
+RB-6,Cron Scheduler Service,Backend Database Extensions & Schedulers,2,2026-07-10,Automated server service to find and match drivers when a scheduled ride is due.
+RB-7,Trip History API,Backend Database Extensions & Schedulers,1,2026-07-13,Database fetch endpoints for the Rider's trip history screen.
+RB-13,QA Testing & Bug Fixing,Real-Time Integration & Launch Prep,2,2026-07-17,Stress tests for network drops crash recovery and final delivery signoff.
