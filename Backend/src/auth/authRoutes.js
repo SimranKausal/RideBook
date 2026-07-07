@@ -279,6 +279,44 @@ router.put('/driver/update-location', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Driver not found.' });
     }
 
+    // 📡 Live ETA & Distance Broadcast Layer
+    if (latitude !== undefined && longitude !== undefined) {
+      const Ride = mongoose.model('Ride');
+      const activeRide = await Ride.findOne({
+        driverId: driverId,
+        status: { $in: ['ACCEPTED', 'ON_TRIP'] }
+      });
+
+      if (activeRide) {
+        const pickupLat = activeRide.pickupLocation.latitude;
+        const pickupLon = activeRide.pickupLocation.longitude;
+        
+        // Haversine calculation
+        const R = 6371; // earth radius in km
+        const dLat = (pickupLat - latitude) * Math.PI / 180;
+        const dLon = (pickupLon - longitude) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(latitude * Math.PI / 180) * Math.cos(pickupLat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c; 
+        const eta = Math.max(1, Math.round((distance / 30) * 60)); // 30 km/h speed assumption
+
+        const io = req.app.get('io');
+        if (io) {
+          console.log(`📡 [Live Tracking] Relaying live ETA: ${distance.toFixed(1)} km, ${eta} mins to Ride: ${activeRide._id}`);
+          io.emit(`ride-update-${activeRide._id}`, {
+            status: activeRide.status,
+            etaUpdate: {
+              distance: parseFloat(distance.toFixed(1)),
+              eta: eta,
+              driverLocation: { latitude, longitude }
+            }
+          });
+        }
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Location and status updated successfully!',
