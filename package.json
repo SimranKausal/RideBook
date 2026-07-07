@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "react-native-maps": "^1.27.2",
-    "socket.io-client": "^4.8.3"
-  }
-}

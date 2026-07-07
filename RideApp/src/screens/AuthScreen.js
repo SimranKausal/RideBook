@@ -24,9 +24,14 @@ export default function AuthScreen({ navigation }) {
       formattedPhone = `+${formattedPhone}`;
     }
 
+    console.log("API URL:", `${API_BASE_URL}/send-otp`);
+    console.log("Sending:", { phoneNumber: formattedPhone });
+
     try {
       console.log(`Sending OTP to formatted number: ${formattedPhone}`);
       const response = await axios.post(`${API_BASE_URL}/send-otp`, { phoneNumber: formattedPhone });
+      
+       console.log("RESPONSE DATA:", response.data);
       
       if (response.data.success) {
         setSessionInfo(response.data.sessionInfo);
@@ -34,9 +39,17 @@ export default function AuthScreen({ navigation }) {
         Alert.alert('Success', 'OTP sent to your phone.');
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Failed to send OTP.';
-      Alert.alert('Error', errorMsg);
-    }
+  console.log("FULL AXIOS ERROR:");
+  console.log(error);
+  console.log("RESPONSE:", error.response?.data);
+  console.log("STATUS:", error.response?.status);
+  console.log("MESSAGE:", error.message);
+
+  Alert.alert(
+    "Error",
+    JSON.stringify(error.response?.data || error.message)
+  );
+}
   };
 
   // 2. Verify OTP Request to Express Backend

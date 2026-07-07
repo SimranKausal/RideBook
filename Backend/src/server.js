@@ -1,3 +1,6 @@
+
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -59,6 +62,8 @@ mongoose.connect("mongodb+srv://kaushalsimran620_db_user:Simran252001@cluster0.a
 });
 
 // 🔥 CRITICAL CHANGE: We now listen via the modified HTTP 'server' instance, NOT 'app' directly!
-server.listen(5000, () => {
-    console.log("🚀 Velo Server listening and running live on Port 5000");
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Velo Server listening and running live on Port ${PORT}`);
 });
