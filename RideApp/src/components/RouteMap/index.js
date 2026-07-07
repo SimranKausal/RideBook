@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Platform } from 'react-native';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE';
 
-const RouteMap = ({ origin, destination }) => {
+const RouteMap = ({ origin, destination, driverLocation }) => {
   const mapRef = useRef(null);
 
   const [routeStrokeWidth, setRouteStrokeWidth] = useState(4);
@@ -13,6 +13,16 @@ const RouteMap = ({ origin, destination }) => {
   
   // 🏪 State for idle online drivers fetched from the DB
   const [idleDrivers, setIdleDrivers] = useState([]);
+  const driverMarkerRef = useRef(null);
+
+  // Smooth Marker gliding animation
+  useEffect(() => {
+    if (driverLocation && driverMarkerRef.current) {
+      if (Platform.OS === 'android') {
+        driverMarkerRef.current.animateMarkerToCoordinate(driverLocation, 3000);
+      }
+    }
+  }, [driverLocation]);
 
   const originLoc = origin?.details?.geometry?.location || origin?.geometry?.location;
   const destinationLoc = destination?.details?.geometry?.location || destination?.geometry?.location;
@@ -124,6 +134,19 @@ const RouteMap = ({ origin, destination }) => {
           </Marker>
         );
       })}
+
+      {/* 🚕 Your Matched Active Driver Marker */}
+      {driverLocation && (
+        <Marker
+          ref={driverMarkerRef}
+          coordinate={driverLocation}
+          title="Your Driver"
+          anchor={{ x: 0.5, y: 0.5 }}
+          flat={true}
+        >
+          <Text style={{ fontSize: 32 }}>🚕</Text>
+        </Marker>
+      )}
 
       {originCoordinate && destinationCoordinate && (
         <MapViewDirections

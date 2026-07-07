@@ -63,7 +63,7 @@ const UberTypes = (props) => {
         
         // 🔥 CRITICAL: Bubble the generated ride ID up to the parent SearchResults container
         if (props.onRideCreated) {
-          props.onRideCreated(ride._id);
+          props.onRideCreated(ride);
         }
         
         if (props.triggerMovement) {

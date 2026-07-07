@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import axios from 'axios';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const API_BASE_URL = 'http://4.240.25.27:5000/api/auth';
 
@@ -12,7 +13,24 @@ export default function VehicleInfoScreen({ route, navigation }) {
   const [carModel, setCarModel] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
   const [color, setColor] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const handleUploadPhoto = () => {
+    const options = {
+      mediaType: 'photo',
+      includeBase64: true,
+      maxHeight: 250,
+      maxWidth: 250,
+    };
+
+    launchImageLibrary(options, (response) => {
+      if (response.assets && response.assets.length > 0) {
+        const base64Str = response.assets[0].base64;
+        setProfilePhoto(`data:image/jpeg;base64,${base64Str}`);
+      }
+    });
+  };
 
   const handleRegister = async () => {
     if (!fullname || !email || !carModel || !plateNumber || !color) {
@@ -31,7 +49,8 @@ export default function VehicleInfoScreen({ route, navigation }) {
           carModel,
           plateNumber,
           color
-        }
+        },
+        profilePhoto: profilePhoto || ""
       });
 
       if (response.data.success) {
@@ -75,6 +94,20 @@ export default function VehicleInfoScreen({ route, navigation }) {
             placeholderTextColor="#64748B"
             keyboardType="email-address"
           />
+
+          <Text style={styles.label}>Profile Photo (Optional)</Text>
+          <View style={styles.photoContainer}>
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.placeholderPhoto}>
+                <Text style={styles.placeholderPhotoText}>👤</Text>
+              </View>
+            )}
+            <TouchableOpacity style={styles.uploadBtn} onPress={handleUploadPhoto}>
+              <Text style={styles.uploadBtnText}>Select Photo</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.sectionHeader}>🚖 Vehicle details</Text>
 
@@ -189,5 +222,42 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  photoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 4,
+  },
+  profileImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+  },
+  placeholderPhoto: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#334155',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderPhotoText: {
+    fontSize: 32,
+    color: '#FFFFFF',
+  },
+  uploadBtn: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginLeft: 16,
+  },
+  uploadBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

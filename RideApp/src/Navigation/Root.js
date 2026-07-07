@@ -10,6 +10,7 @@ import AuthScreen from '../screens/AuthScreen';
 import HomeNavigator from "./Home.js";
 import CompleteProfileScreen from '../screens/CompleteProfileScreen'; //
 import CustomDrawer from "./CustomDrawer.js";
+import HistoryScreen from '../screens/HistoryScreen';
 
 // Initialize both Navigators
 const RootStack = createNativeStackNavigator();
@@ -38,9 +39,7 @@ const AppDrawerNavigator = () => {
       {/* Your working Map Stack sits right here as the primary screen */}
       <Drawer.Screen name="Home" component={HomeNavigator} />
 
-      <Drawer.Screen name="Your Trips">
-        {() => <DummyScreen name="Your Trips" />}
-      </Drawer.Screen>
+      <Drawer.Screen name="Your Trips" component={HistoryScreen} />
 
       <Drawer.Screen name="Help">
         {() => <DummyScreen name="Help" />}
