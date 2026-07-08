@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Switch, SafeAreaView, Dimensions, Alert, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Switch, SafeAreaView, Dimensions, Alert, TouchableOpacity, Modal, TextInput, ScrollView } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { io } from 'socket.io-client';
@@ -161,6 +161,31 @@ export default function DashboardScreen({ route }) {
       { latitude: start.latitude, longitude: end.longitude },
       { latitude: end.latitude, longitude: end.longitude }
     ];
+  };
+
+  // Calculates Haversine distance and travel time (ETA) to passenger
+  const calculateDistanceAndEta = () => {
+    if (!currentLocation || !activeRide || !activeRide.pickup) return null;
+    
+    const lat1 = currentLocation.latitude;
+    const lon1 = currentLocation.longitude;
+    const lat2 = activeRide.pickup.latitude;
+    const lon2 = activeRide.pickup.longitude;
+    
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c; 
+    const eta = Math.max(1, Math.round((distance / 30) * 60)); // 30 km/h speed assumption
+    
+    return {
+      distance: distance.toFixed(1),
+      eta
+    };
   };
 
   // ✅ Accept Ride API Caller
@@ -390,6 +415,14 @@ export default function DashboardScreen({ route }) {
           <Text style={styles.activeRideHeader}>
             {activeRide.status === 'ACCEPTED' ? 'Heading to Pickup 🚗' : 'Active Trip in Progress 🏁'}
           </Text>
+
+          {activeRide.status === 'ACCEPTED' && (
+            <View style={styles.etaContainer}>
+              <Text style={styles.etaText}>
+                🟢 Passenger is <Text style={{fontWeight:'800', color: '#10B981'}}>{calculateDistanceAndEta()?.distance || '0.0'} km</Text> away (approx. <Text style={{fontWeight:'800', color: '#10B981'}}>{calculateDistanceAndEta()?.eta || '0'} mins</Text>)
+              </Text>
+            </View>
+          )}
           
           <View style={styles.addressContainer}>
             <Text style={styles.addressLabel}>📍 PICKUP</Text>
@@ -922,5 +955,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     marginTop: 2,
+  },
+  etaContainer: {
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  etaText: {
+    color: '#94A3B8',
+    fontSize: 13,
   },
 });
