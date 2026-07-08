@@ -138,7 +138,7 @@ export default function DashboardScreen({ route }) {
       (error) => {
         console.log('❌ [GPS Error] Could not fetch current coordinates:', error.message);
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
   };
 
