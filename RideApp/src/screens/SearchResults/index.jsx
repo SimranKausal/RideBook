@@ -27,6 +27,14 @@ const SearchResults = () => {
   const [etaInfo, setEtaInfo] = useState(null); // stores { distance, eta }
   const [driverPos, setDriverPos] = useState(null); // stores live driver coordinate
 
+  // 📅 Book for Later states
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedVehicleForLater, setSelectedVehicleForLater] = useState('Velo Go');
+  const [selectedDayOffset, setSelectedDayOffset] = useState(0); // 0=Today, 1=Tomorrow, 2=Day After
+  const [selectedHour, setSelectedHour] = useState('09');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [selectedAmPm, setSelectedAmPm] = useState('AM');
+
   const socketRef = useRef(null);
 
   // ✨ Rectified: Coordinates fall back instantly to real numbers so placeholder states don't freeze
@@ -181,6 +189,57 @@ const SearchResults = () => {
     );
   };
 
+  // Calculates and saves scheduled ride request to backend
+  const handleScheduleRide = async () => {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + selectedDayOffset);
+    
+    let hour = parseInt(selectedHour);
+    if (selectedAmPm === 'PM' && hour < 12) hour += 12;
+    if (selectedAmPm === 'AM' && hour === 12) hour = 0;
+    
+    targetDate.setHours(hour, parseInt(selectedMinute), 0, 0);
+
+    // Validate that scheduled departure is in the future
+    if (targetDate.getTime() <= Date.now()) {
+      Alert.alert("Invalid Time ❌", "Scheduled departure time must be in the future!");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://4.240.25.27:5000/api/rides/request-ride', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          passengerId: "6a28fac827c86bf2fdbcd628", // Dummy passenger ID
+          pickupLocation: pickupLocation, 
+          dropoffLocation: dropoffLocation, 
+          vehicleType: selectedVehicleForLater,
+          scheduledTime: targetDate.toISOString()
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert(
+          "Ride Scheduled! 🎉",
+          `Your ride has been successfully booked for ${targetDate.toLocaleString()}.\n\nWe will automatically match a driver 5 minutes before departure.`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                setShowDatePicker(false);
+                navigation.navigate('HomeScreen');
+              }
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      Alert.alert("Scheduling Error", "Could not complete your scheduled ride request.");
+    }
+  };
+
   const sendChatMessage = (text) => {
     if (!currentRideId || !text.trim()) return;
     if (socketRef.current) {
@@ -243,6 +302,10 @@ const SearchResults = () => {
                 dropoffLocation={dropoffLocation} 
                 triggerMovement={() => setIsDriving(true)}
                 onRideCreated={handleRideCreated}
+                onPressBookForLater={(vehicleType) => {
+                  setSelectedVehicleForLater(vehicleType);
+                  setShowDatePicker(true);
+                }}
               />
             )}
           </View>
@@ -307,6 +370,88 @@ const SearchResults = () => {
           </View>
         )}
       </View>
+
+      {/* 📅 BOOK FOR LATER: CUSTOM DATE/TIME PICKER MODAL */}
+      <Modal visible={showDatePicker} animationType="slide" transparent={true}>
+        <View style={styles.pickerOverlay}>
+          <View style={styles.pickerCard}>
+            <Text style={styles.pickerTitle}>Schedule a Ride 📅</Text>
+            <Text style={styles.pickerSub}>Select when you want to be picked up:</Text>
+
+            {/* DAY SELECTOR */}
+            <Text style={styles.sectionLabel}>Date:</Text>
+            <View style={styles.pickerRow}>
+              {['Today', 'Tomorrow', 'Day After'].map((day, idx) => (
+                <TouchableOpacity 
+                  key={day}
+                  style={[styles.pickerOpt, selectedDayOffset === idx && styles.pickerOptActive]}
+                  onPress={() => setSelectedDayOffset(idx)}
+                >
+                  <Text style={[styles.pickerOptText, selectedDayOffset === idx && styles.pickerOptTextActive]}>{day}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* HOUR SELECTOR */}
+            <Text style={styles.sectionLabel}>Time:</Text>
+            <View style={styles.pickerRow}>
+              <View style={styles.timeDropdownCol}>
+                <Text style={styles.dropdownLabel}>Hour</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 40 }}>
+                  {['01','02','03','04','05','06','07','08','09','10','11','12'].map((hr) => (
+                    <TouchableOpacity 
+                      key={hr}
+                      style={[styles.timeBtn, selectedHour === hr && styles.timeBtnActive]}
+                      onPress={() => setSelectedHour(hr)}
+                    >
+                      <Text style={[styles.timeBtnText, selectedHour === hr && styles.timeBtnTextActive]}>{hr}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            {/* MINUTES & AM/PM SELECTORS */}
+            <View style={styles.pickerRow}>
+              <View style={styles.timeDropdownCol}>
+                <Text style={styles.dropdownLabel}>Minute</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 40 }}>
+                  {['00', '15', '30', '45'].map((min) => (
+                    <TouchableOpacity 
+                      key={min}
+                      style={[styles.timeBtn, selectedMinute === min && styles.timeBtnActive]}
+                      onPress={() => setSelectedMinute(min)}
+                    >
+                      <Text style={[styles.timeBtnText, selectedMinute === min && styles.timeBtnTextActive]}>{min}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 6, alignSelf: 'flex-end', marginLeft: 16 }}>
+                {['AM', 'PM'].map((ampm) => (
+                  <TouchableOpacity 
+                    key={ampm}
+                    style={[styles.timeBtn, selectedAmPm === ampm && styles.timeBtnActive]}
+                    onPress={() => setSelectedAmPm(ampm)}
+                  >
+                    <Text style={[styles.timeBtnText, selectedAmPm === ampm && styles.timeBtnTextActive]}>{ampm}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* ACTION BUTTONS */}
+            <TouchableOpacity style={styles.confirmScheduleBtn} onPress={handleScheduleRide}>
+              <Text style={styles.confirmScheduleBtnText}>Confirm Scheduled Booking 📅</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.closePickerBtn} onPress={() => setShowDatePicker(false)}>
+              <Text style={styles.closePickerBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* 💬 CHAT CONVERSATION MODAL */}
       <Modal visible={showChat} animationType="slide" transparent={false}>
@@ -661,6 +806,116 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  pickerCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '85%',
+  },
+  pickerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6,
+  },
+  pickerSub: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#3B82F6',
+    textTransform: 'uppercase',
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  pickerOpt: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  pickerOptActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#3B82F6',
+  },
+  pickerOptText: {
+    fontSize: 13,
+    color: '#475569',
+    fontWeight: '600',
+  },
+  pickerOptTextActive: {
+    color: '#1E40AF',
+    fontWeight: '700',
+  },
+  timeDropdownCol: {
+    flex: 1,
+  },
+  dropdownLabel: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  timeBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
+    marginRight: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeBtnActive: {
+    backgroundColor: '#3B82F6',
+  },
+  timeBtnText: {
+    fontSize: 13,
+    color: '#475569',
+    fontWeight: '600',
+  },
+  timeBtnTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  confirmScheduleBtn: {
+    backgroundColor: '#000000',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  confirmScheduleBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  closePickerBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  closePickerBtnText: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

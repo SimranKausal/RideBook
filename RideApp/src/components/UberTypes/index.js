@@ -116,21 +116,38 @@ const UberTypes = (props) => {
         );
       })}
 
-      <View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginVertical: 8 }}>
         <Pressable 
           onPress={confirm} 
           disabled={isSearching}
           style={{
+            flex: 4,
             backgroundColor: isSearching ? '#555555' : '#000000',
             padding: 15,
-            margin: 10,
+            marginRight: 8,
             alignItems: 'center',
             borderRadius: 10
           }}
         >
-          <Text style={{ color: "#ffffff", fontSize: 18, fontWeight: '700' }}>
-            {isSearching ? "Searching for Nearby Drivers..." : `Confirm ${selectedType}`}
+          <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: '700' }}>
+            {isSearching ? "Searching..." : `Confirm ${selectedType}`}
           </Text>
+        </Pressable>
+
+        <Pressable 
+          onPress={() => props.onPressBookForLater(selectedType)} 
+          disabled={isSearching}
+          style={{
+            flex: 1,
+            backgroundColor: '#F1F5F9',
+            borderColor: '#CBD5E1',
+            borderWidth: 1.5,
+            padding: 15,
+            alignItems: 'center',
+            borderRadius: 10
+          }}
+        >
+          <Text style={{ fontSize: 18 }}>📅</Text>
         </Pressable>
       </View>
     </View>
