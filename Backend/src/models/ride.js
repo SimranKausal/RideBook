@@ -27,8 +27,12 @@ const RideSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['SEARCHING', 'ACCEPTED', 'ON_TRIP', 'COMPLETED', 'CANCELLED'],
+    enum: ['SEARCHING', 'ACCEPTED', 'ON_TRIP', 'COMPLETED', 'CANCELLED', 'SCHEDULED'],
     default: 'SEARCHING'
+  },
+  scheduledTime: {
+    type: Date,
+    default: null
   },
   startOtp: {
     type: String,

@@ -11,6 +11,7 @@ require('dotenv').config();
 
 const authRoutes = require('./auth/authRoutes');
 const rideRoutes = require('./routes/rides');
+const { startRideScheduler } = require('./services/scheduler');
 
 const app = express();
 
@@ -65,6 +66,9 @@ io.on('connection', (socket) => {
 
 // 💾 Make the 'io' engine safely available to our routes files
 app.set('io', io);
+
+// ⏰ Start the background Scheduled Ride Cron Service
+startRideScheduler(io);
 
 mongoose.connect("mongodb+srv://kaushalsimran620_db_user:Simran252001@cluster0.a0fxt2w.mongodb.net/?appName=Cluster0")
 .then(() => {

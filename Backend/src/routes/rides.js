@@ -20,9 +20,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // 🚖 2. POST Route: Process booking request, compute dynamic fare, and broadcast via WebSockets
 router.post('/request-ride', async (req, res) => {
-  const { passengerId, pickupLocation, dropoffLocation, vehicleType } = req.body;
+  const { passengerId, pickupLocation, dropoffLocation, vehicleType, scheduledTime } = req.body;
 
-  console.log(`\n🚖 [Ride Engine] New request received from Passenger ID: ${passengerId}`);
+  const isScheduled = !!scheduledTime;
+  console.log(`\n🚖 [Ride Engine] New request received from Passenger ID: ${passengerId} (Scheduled: ${isScheduled})`);
 
   try {
     const pickupLat = pickupLocation?.latitude;
@@ -75,17 +76,18 @@ router.post('/request-ride', async (req, res) => {
         longitude: dropoffLon || 77.2177
       },
       fare: computedFare,
-      status: 'SEARCHING',
+      status: isScheduled ? 'SCHEDULED' : 'SEARCHING',
+      scheduledTime: isScheduled ? new Date(scheduledTime) : null,
       startOtp: randomOtp
     });
 
     await newRide.save();
-    console.log(`💾 [Database] Saved pending ride with ID: ${newRide._id}`);
+    console.log(`💾 [Database] Saved ride with ID: ${newRide._id} (Status: ${newRide.status})`);
 
     // 🎯 Step C: Target Allocation & Real-Time Broadcast Layer
     const io = req.app.get('io');
 
-    if (io) {
+    if (!isScheduled && io) {
       console.log(`📡 [Socket Engine] Broadcasting incoming trip booking request to driver network streams...`);
       
       io.to('drivers-room').emit('incoming-ride-request', {
@@ -100,7 +102,9 @@ router.post('/request-ride', async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Ride request posted for ₹${computedFare}. Searching for available local drivers...`,
+      message: isScheduled 
+        ? `Ride scheduled successfully for ${new Date(scheduledTime).toLocaleString()}.`
+        : `Ride request posted for ₹${computedFare}. Searching for available local drivers...`,
       ride: newRide
     });
 
