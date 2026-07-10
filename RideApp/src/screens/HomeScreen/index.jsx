@@ -1,9 +1,63 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import HomeMap from '../../components/HomeMap/index';
 import HomeSearch from "../../components/HomeSearch";
+import { useNavigation } from '@react-navigation/native';
+import Geolocation from '@react-native-community/geolocation';
 
 const HomeScreen = () => {
+  const navigation = useNavigation();
+
+  const handleSavedPlaceShortcut = (placeType) => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const originPlace = {
+          data: { description: 'Current Location' },
+          details: {
+            geometry: {
+              location: {
+                lat: latitude,
+                lng: longitude
+              }
+            }
+          }
+        };
+
+        let destinationPlace = null;
+        if (placeType === 'home') {
+          destinationPlace = {
+            data: { description: 'Home (Connaught Place)' },
+            details: {
+              geometry: {
+                location: { lat: 28.6304, lng: 77.2177 }
+              }
+            }
+          };
+        } else {
+          destinationPlace = {
+            data: { description: 'Work (DLF Cyber City)' },
+            details: {
+              geometry: {
+                location: { lat: 28.4952, lng: 77.0878 }
+              }
+            }
+          };
+        }
+
+        // Navigate directly to estimates panel in SearchResults screen
+        navigation.navigate('SearchResults', {
+          originPlace,
+          destinationPlace
+        });
+      },
+      (error) => {
+        Alert.alert("Location Error ❌", "Could not fetch current coordinates to start booking.");
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+    );
+  };
+
   return (
     <View style={styles.container}>
       
@@ -29,6 +83,25 @@ const HomeScreen = () => {
           <View style={styles.pinPointerStem} />
           <View style={styles.pinTargetDot} />
         </View>
+      </View>
+
+      {/* Floating Saved Places Shortcuts Column */}
+      <View style={styles.shortcutsColumn}>
+        <TouchableOpacity 
+          style={styles.shortcutCircle} 
+          onPress={() => handleSavedPlaceShortcut('home')}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontSize: 18 }}>🏠</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.shortcutCircle} 
+          onPress={() => handleSavedPlaceShortcut('work')}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontSize: 18 }}>💼</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Floating Re-center Target Button */}
@@ -128,6 +201,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 3,
+  },
+  shortcutsColumn: {
+    position: 'absolute',
+    bottom: 335, // Positioned exactly above the recenter button
+    right: 20,
+    gap: 10,
+    zIndex: 5,
+  },
+  shortcutCircle: {
+    backgroundColor: '#FFFFFF',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   recenterButton: {
     position: 'absolute',
