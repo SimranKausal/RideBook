@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, Pressable, Alert } from 'react-native'
+import { View, Text, Pressable, Alert, TextInput } from 'react-native'
 import UberTypeRow from '../UberTypeRow'
 import typesdata from "../../assets/data/types"
 import axios from 'axios'
@@ -39,6 +39,48 @@ const UberTypes = (props) => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedType, setSelectedType] = useState(typesdata[0]?.type || 'Velo Go');
 
+  // 🎟️ Promo Code States
+  const [promoText, setPromoText] = useState('');
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
+  const [discountAmt, setDiscountAmt] = useState(0);
+  const [appliedPromoDesc, setAppliedPromoDesc] = useState('');
+
+  // Hits the backend validate-promo endpoint
+  const handleApplyPromo = async () => {
+    if (isPromoApplied) {
+      // Clear promo
+      setIsPromoApplied(false);
+      setPromoText('');
+      setDiscountAmt(0);
+      setAppliedPromoDesc('');
+      return;
+    }
+
+    if (!promoText.trim()) {
+      Alert.alert("Empty Code ⚠️", "Please enter a promo code first.");
+      return;
+    }
+
+    const currentEstimate = getFrontendEstimate(selectedType, props.pickupLocation, props.dropoffLocation);
+
+    try {
+      const response = await axios.post('http://4.240.25.27:5000/api/rides/validate-promo', {
+        promoCode: promoText,
+        fare: currentEstimate
+      });
+
+      if (response.data.success) {
+        setIsPromoApplied(true);
+        setDiscountAmt(response.data.discountAmount);
+        setAppliedPromoDesc(response.data.description);
+        Alert.alert("Promo Applied! 🎉", `Discount: -₹${response.data.discountAmount}\n${response.data.description}`);
+      }
+    } catch (error) {
+      const msg = error.response?.data?.message || "Invalid Promo Code ❌";
+      Alert.alert("Failed", msg);
+    }
+  };
+
   const confirm = async () => {
     if (!props.pickupLocation || !props.dropoffLocation) {
       Alert.alert("Missing Locations", "Please select a pickup and destination first.");
@@ -51,7 +93,8 @@ const UberTypes = (props) => {
       passengerId: "6a28fac827c86bf2fdbcd628", 
       pickupLocation: props.pickupLocation, 
       dropoffLocation: props.dropoffLocation, 
-      vehicleType: selectedType 
+      vehicleType: selectedType,
+      promoCode: isPromoApplied ? promoText : null
     };
 
     try {
@@ -110,6 +153,61 @@ const UberTypes = (props) => {
           </Pressable>
         );
       })}
+
+      {/* 🎟️ PROMO CODE CARD BLOCK */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        borderRadius: 10,
+        marginHorizontal: 10,
+        marginVertical: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+      }}>
+        <TextInput
+          placeholder="Promo Code (e.g. VELO50)"
+          placeholderTextColor="#64748B"
+          autoCapitalize="characters"
+          style={{
+            flex: 1,
+            fontSize: 14,
+            fontWeight: '700',
+            color: '#0F172A',
+            padding: 4,
+          }}
+          value={promoText}
+          onChangeText={setPromoText}
+          editable={!isPromoApplied}
+        />
+        <Pressable 
+          onPress={handleApplyPromo}
+          style={{
+            backgroundColor: '#0F172A',
+            borderRadius: 6,
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>
+            {isPromoApplied ? "Clear" : "Apply"}
+          </Text>
+        </Pressable>
+      </View>
+
+      {isPromoApplied && (
+        <Text style={{
+          color: '#16A34A',
+          fontSize: 12,
+          fontWeight: '700',
+          marginLeft: 14,
+          marginBottom: 6,
+        }}>
+          🎉 Applied: {appliedPromoDesc} (Discount: -₹{discountAmt})
+        </Text>
+      )}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginVertical: 8 }}>
         <Pressable 

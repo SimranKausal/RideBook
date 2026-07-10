@@ -59,6 +59,28 @@ router.post('/request-ride', async (req, res) => {
     const computedFare = Math.round((50 + (distanceKm * ratePerKm)) * surgeMultiplier);
     console.log(`💰 Dynamic Fare Generated: ₹${computedFare} for tier [${selectedVehicle}]`);
 
+    // Securely apply promo discount on server-side if provided
+    let finalFare = computedFare;
+    let discountAmount = 0;
+    if (req.body.promoCode) {
+      const code = req.body.promoCode.toUpperCase().trim();
+      const promoDict = {
+        'VELO50': { type: 'percent', value: 0.50 },
+        'SAVE100': { type: 'flat', value: 100 },
+        'WELCOME20': { type: 'percent', value: 0.20 }
+      };
+      if (promoDict[code]) {
+        const promo = promoDict[code];
+        if (promo.type === 'percent') {
+          discountAmount = Math.round(computedFare * promo.value);
+        } else if (promo.type === 'flat') {
+          discountAmount = Math.min(computedFare, promo.value);
+        }
+        finalFare = Math.max(50, computedFare - discountAmount);
+        console.log(`🎟️ [Promo Engine] Applied Code: ${code}. Fare reduced from ₹${computedFare} to ₹${finalFare}`);
+      }
+    }
+
     // Generate a random 4-digit start OTP
     const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
 
@@ -75,7 +97,7 @@ router.post('/request-ride', async (req, res) => {
         latitude: dropoffLat || 28.6304,
         longitude: dropoffLon || 77.2177
       },
-      fare: computedFare,
+      fare: finalFare,
       status: isScheduled ? 'SCHEDULED' : 'SEARCHING',
       scheduledTime: isScheduled ? new Date(scheduledTime) : null,
       startOtp: randomOtp
@@ -155,6 +177,44 @@ router.post('/estimate-fares', (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
+  }
+// 🎟️ Promo Validation Route
+router.post('/validate-promo', (req, res) => {
+  const { promoCode, fare } = req.body;
+  if (!promoCode || !fare) {
+    return res.status(400).json({ success: false, message: 'Missing promoCode or fare parameters.' });
+  }
+
+  const code = promoCode.toUpperCase().trim();
+  
+  const promoDict = {
+    'VELO50': { type: 'percent', value: 0.50, desc: '50% off your ride' },
+    'SAVE100': { type: 'flat', value: 100, desc: 'Flat ₹100 off' },
+    'WELCOME20': { type: 'percent', value: 0.20, desc: '20% off your first ride' }
+  };
+
+  if (promoDict[code]) {
+    const promo = promoDict[code];
+    let discountAmount = 0;
+    if (promo.type === 'percent') {
+      discountAmount = Math.round(fare * promo.value);
+    } else if (promo.type === 'flat') {
+      discountAmount = Math.min(fare, promo.value);
+    }
+    
+    const finalFare = Math.max(50, fare - discountAmount); // Minimum fare limit of ₹50
+    
+    return res.status(200).json({
+      success: true,
+      discountAmount,
+      finalFare,
+      description: promo.desc
+    });
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid Promo Code ❌'
+    });
   }
 });
 
