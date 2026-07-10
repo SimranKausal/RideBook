@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; 
 import styles from "./styles";
 import { useNavigation } from '@react-navigation/native';
 
@@ -13,39 +12,60 @@ const HomeSearch = () => {
 
   return (
     <View style={styles.container}>
-      {/* 🔍 Search Input Card Box */}
-      <Pressable onPress={goToSearch} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
-        <View style={styles.inputBox}>
-          <Text style={styles.inputText}>Where to?</Text>
-          
-          <View style={styles.timeContainer}>
-            <MaterialIcons name="schedule" size={18} color="#0F172A" />
-            <Text style={styles.timeText}>Now</Text>
-            <MaterialIcons name="keyboard-arrow-down" size={16} color="#0F172A" />
-          </View>
-        </View>
+      {/* Drawer slide indicator bar */}
+      <View style={styles.slideIndicator} />
+
+      {/* 🔍 Search Input Capsule */}
+      <Pressable onPress={goToSearch} style={styles.searchBarCapsule}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <Text style={styles.searchText}>Where do you want to go?</Text>
       </Pressable>
 
-      {/* 🕒 Recent History Destination Row */}
-      <View style={styles.row}>
-        <View style={styles.iconContainer}>
-          <MaterialIcons name={'history'} size={22} color="#64748B" />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.destinationText}>Spin Nightclub</Text>
-          <Text style={styles.subText}>23, Albert Street, New Delhi</Text>
-        </View>
+      {/* Section Title */}
+      <Text style={styles.sectionTitle}>Everything In Minutes</Text>
+
+      {/* Grid Row 1 */}
+      <View style={styles.gridRow}>
+        {/* Card 1: Cab Booking */}
+        <Pressable onPress={goToSearch} style={styles.gridCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardSub}>Quick book</Text>
+            <Text style={styles.cardTitle}>Velo Cab</Text>
+          </View>
+          <Text style={styles.cardGraphic}>🚖</Text>
+        </Pressable>
+
+        {/* Card 2: Metro Tickets */}
+        <Pressable onPress={goToSearch} style={styles.gridCard}>
+          <View style={styles.cardHeader}>
+            <View style={styles.offersBadge}>
+              <Text style={styles.offersBadgeText}>% Offers</Text>
+            </View>
+            <Text style={styles.cardTitle}>Metro tickets</Text>
+          </View>
+          <Text style={styles.cardGraphic}>🚇</Text>
+        </Pressable>
       </View>
-        
-      {/* 🏠 Saved Home Destination Row */}
-      <View style={styles.row}>
-        <View style={[styles.iconContainer, styles.homeIconContainer]}>
-          <MaterialIcons name={'home'} size={22} color="#3B82F6" />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.destinationText}>Home</Text>
-          <Text style={styles.subText}>Pocket C-8, Vasant Kunj, New Delhi</Text>
-        </View>
+
+      {/* Grid Row 2 */}
+      <View style={styles.gridRow}>
+        {/* Card 3: Parcel Delivery */}
+        <Pressable onPress={goToSearch} style={styles.gridCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardSub}>Send anything</Text>
+            <Text style={styles.cardTitle}>Parcel</Text>
+          </View>
+          <Text style={styles.cardGraphic}>📦</Text>
+        </Pressable>
+
+        {/* Card 4: Eco-Rickshaws */}
+        <Pressable onPress={goToSearch} style={styles.gridCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardSub}>Eco ride</Text>
+            <Text style={styles.cardTitle}>E-rickshaw</Text>
+          </View>
+          <Text style={styles.cardGraphic}>🛺</Text>
+        </Pressable>
       </View>
     </View>
   );

@@ -3,88 +3,109 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 16,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: 10,
     paddingHorizontal: 16,
     paddingBottom: 24,
-    // Soft drop shadow for premium elevation
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 15,
   },
-  inputBox: {
-    backgroundColor: '#F1F5F9', // Light Slate-100
-    borderRadius: 16,
+  slideIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  searchBarCapsule: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0', // Slate-200
-  },
-  inputText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A', // Deep Slate-900
-    letterSpacing: 0.5,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 50,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    gap: 4,
-    // Tiny shadow for the time pill
-    shadowColor: '#000',
+    paddingHorizontal: 18,
+    marginBottom: 20,
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
     elevation: 2,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  timeText: {
-    fontSize: 13,
-    fontWeight: '600',
+  searchIcon: {
+    fontSize: 16,
+    color: '#64748B',
+    marginRight: 10,
+  },
+  searchText: {
+    fontSize: 15,
+    fontWeight: '700',
     color: '#0F172A',
   },
-  row: {
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#334155',
+    marginBottom: 12,
+  },
+  gridRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9', // Divider color
+    gap: 12,
+    marginBottom: 12,
   },
-  iconContainer: {
-    backgroundColor: '#F1F5F9',
-    padding: 10,
-    borderRadius: 50,
-    marginRight: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  homeIconContainer: {
-    backgroundColor: '#EFF6FF', // Light blue background for Home
-  },
-  destinationText: {
-    fontWeight: '600',
-    fontSize: 15,
-    color: '#1E293B', // Slate-800
-  },
-  subText: {
-    fontSize: 12,
-    color: '#64748B', // Slate-500
-    marginTop: 2,
-  },
-  textContainer: {
+  gridCard: {
     flex: 1,
-  }
+    height: 100,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  cardHeader: {
+    flex: 1.5,
+    justifyContent: 'flex-start',
+  },
+  cardSub: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  offersBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#DEF7EC',
+    borderColor: '#31C48D',
+    borderWidth: 0.5,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginBottom: 4,
+  },
+  offersBadgeText: {
+    color: '#03543F',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  cardGraphic: {
+    fontSize: 34,
+    alignSelf: 'flex-end',
+    flex: 1,
+    textAlign: 'right',
+  },
 });
 
 export default styles;
