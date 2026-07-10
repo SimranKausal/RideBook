@@ -39,6 +39,9 @@ const SearchResults = () => {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedRating, setSelectedRating] = useState(5);
 
+  // 🛡️ Driver Profile details modal state
+  const [showDriverProfile, setShowDriverProfile] = useState(false);
+
   const socketRef = useRef(null);
 
   // ✨ Rectified: Coordinates fall back instantly to real numbers so placeholder states don't freeze
@@ -331,8 +334,12 @@ const SearchResults = () => {
             )}
           </View>
         ) : (
-          // 🚖 Matched Driver Details Card
-          <View style={styles.driverCard}>
+          // 🚖 Matched Driver Details Card (Tap to view profile details)
+          <TouchableOpacity 
+            activeOpacity={0.9} 
+            onPress={() => setShowDriverProfile(true)}
+            style={styles.driverCard}
+          >
             <View style={styles.driverInfoRow}>
               {matchedDriver?.profilePhoto ? (
                 <Image source={{ uri: matchedDriver.profilePhoto }} style={styles.driverPhoto} />
@@ -345,9 +352,9 @@ const SearchResults = () => {
               <View style={styles.driverDetails}>
                 <Text style={styles.driverName}>{matchedDriver?.fullname || 'Driver'}</Text>
                 <Text style={styles.driverVehicle}>
-                  {matchedDriver?.vehicle?.color || 'White'} {matchedDriver?.vehicle?.carModel || 'Maruti Suzuki Swift'}
+                  {matchedDriver?.vehicleDetails?.color || matchedDriver?.vehicle?.color || 'White'} {matchedDriver?.vehicleDetails?.carModel || matchedDriver?.vehicle?.carModel || 'Maruti Swift'}
                 </Text>
-                <Text style={styles.driverPlate}>Plate: {matchedDriver?.vehicle?.plateNumber || 'DL 3C AY 4412'}</Text>
+                <Text style={styles.driverPlate}>Plate: {matchedDriver?.vehicleDetails?.plateNumber || matchedDriver?.vehicle?.plateNumber || 'DL 3C AY 4412'}</Text>
               </View>
               
               <View style={styles.otpBadge}>
@@ -469,6 +476,85 @@ const SearchResults = () => {
 
             <TouchableOpacity style={styles.closePickerBtn} onPress={() => setShowDatePicker(false)}>
               <Text style={styles.closePickerBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 🛡️ DRIVER PROFILE MODAL */}
+      <Modal visible={showDriverProfile} animationType="slide" transparent={true}>
+        <View style={styles.profileOverlay}>
+          <View style={styles.profileCard}>
+            <View style={styles.profileHandleBar} />
+            
+            <Text style={styles.profileTitleText}>Driver Profile Details</Text>
+            
+            {matchedDriver ? (
+              <View style={styles.profileBody}>
+                {matchedDriver.profilePhoto ? (
+                  <Image source={{ uri: matchedDriver.profilePhoto }} style={styles.profileDriverPhotoLarge} />
+                ) : (
+                  <View style={[styles.profileDriverPhotoLarge, { backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ fontSize: 32 }}>👤</Text>
+                  </View>
+                )}
+                <Text style={styles.profileDriverNameLarge}>{matchedDriver.fullname || 'Driver'}</Text>
+                
+                {/* Rating display */}
+                <View style={styles.profileRatingRow}>
+                  <Text style={{ fontSize: 16, color: '#FBBF24' }}>★</Text>
+                  <Text style={styles.profileRatingText}>
+                    {matchedDriver.rating ? matchedDriver.rating.toFixed(1) : '5.0'} ({matchedDriver.ratingCount || 0} reviews)
+                  </Text>
+                </View>
+
+                <View style={styles.dividerLine} />
+
+                {/* Quick stats grid */}
+                <View style={styles.statsGrid}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statVal}>1.2K</Text>
+                    <Text style={styles.statLabel}>Trips</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statVal}>2 Yrs</Text>
+                    <Text style={styles.statLabel}>Active</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statVal}>99%</Text>
+                    <Text style={styles.statLabel}>Rating</Text>
+                  </View>
+                </View>
+
+                <View style={styles.dividerLine} />
+
+                {/* Vehicle details */}
+                <Text style={styles.vehicleLabel}>Vehicle Details</Text>
+                <View style={styles.vehiclePanel}>
+                  <Text style={styles.vehicleModelText}>
+                    🚗 {matchedDriver.vehicleDetails?.color || matchedDriver.vehicle?.color || 'White'} {matchedDriver.vehicleDetails?.carModel || matchedDriver.vehicle?.carModel || 'Maruti Swift'}
+                  </Text>
+                  <View style={styles.plateBadgeLarge}>
+                    <Text style={styles.plateTextLarge}>{matchedDriver.vehicleDetails?.plateNumber || matchedDriver.vehicle?.plateNumber || 'DL 3C AY 4412'}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.dividerLine} />
+
+                {/* Specialty badges */}
+                <Text style={styles.badgesLabel}>Specialty Badges</Text>
+                <View style={styles.badgesContainer}>
+                  <View style={styles.badgeItem}><Text style={styles.badgeText}>🛡️ Safe Driver</Text></View>
+                  <View style={styles.badgeItem}><Text style={styles.badgeText}>💬 Friendly</Text></View>
+                  <View style={styles.badgeItem}><Text style={styles.badgeText}>⚡ Fast Pickups</Text></View>
+                </View>
+              </View>
+            ) : (
+              <Text style={{ color: 'white', marginVertical: 20 }}>No driver matched yet.</Text>
+            )}
+
+            <TouchableOpacity style={styles.closeProfileBtn} onPress={() => setShowDriverProfile(false)}>
+              <Text style={styles.closeProfileBtnText}>Close Details</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1135,6 +1221,172 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 13,
     fontWeight: '600',
+  },
+  profileOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    justifyContent: 'flex-end',
+  },
+  profileCard: {
+    backgroundColor: '#0F172A',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1.5,
+    borderColor: '#1E293B',
+    padding: 24,
+    maxHeight: '85%',
+  },
+  profileHandleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#334155',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  profileTitleText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  profileBody: {
+    alignItems: 'center',
+  },
+  profileDriverPhotoLarge: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: '#38BDF8',
+    marginBottom: 10,
+  },
+  profileDriverNameLarge: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  profileRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  profileRatingText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  dividerLine: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#1E293B',
+    marginVertical: 14,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-around',
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  statVal: {
+    color: '#38BDF8',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  statLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  vehicleLabel: {
+    alignSelf: 'flex-start',
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  vehiclePanel: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1E293B',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  vehicleModelText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  plateBadgeLarge: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#0F172A',
+  },
+  plateTextLarge: {
+    color: '#0F172A',
+    fontWeight: '800',
+    fontSize: 11,
+  },
+  badgesLabel: {
+    alignSelf: 'flex-start',
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'flex-start',
+  },
+  badgeItem: {
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  badgeText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  closeProfileBtn: {
+    backgroundColor: '#1E293B',
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  closeProfileBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
   },
 });
 
