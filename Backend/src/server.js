@@ -11,6 +11,7 @@ require('dotenv').config();
 
 const authRoutes = require('./auth/authRoutes');
 const rideRoutes = require('./routes/rides');
+const paymentRoutes = require('./routes/payments');
 const { startRideScheduler } = require('./services/scheduler');
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rides', rideRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get("/", (req, res) => {
     res.send("RideBook Backend Running with Live Socket Engine");

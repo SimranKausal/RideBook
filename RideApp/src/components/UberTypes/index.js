@@ -3,6 +3,7 @@ import { View, Text, Pressable, Alert, TextInput } from 'react-native'
 import UberTypeRow from '../UberTypeRow'
 import typesdata from "../../assets/data/types"
 import axios from 'axios'
+import RazorpayCheckout from 'react-native-razorpay'
 
 // 📐 1. Haversine Formula (Dynamic layout)
 const calculateHaversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -60,6 +61,9 @@ const UberTypes = (props) => {
   const [discountAmt, setDiscountAmt] = useState(0);
   const [appliedPromoDesc, setAppliedPromoDesc] = useState('');
 
+  // 💳 Payment states
+  const [paymentMethod, setPaymentMethod] = useState('CASH'); // CASH or ONLINE
+
   // Hits the backend validate-promo endpoint
   const handleApplyPromo = async () => {
     if (isPromoApplied) {
@@ -96,31 +100,28 @@ const UberTypes = (props) => {
     }
   };
 
-  const confirm = async () => {
-    if (!props.pickupLocation || !props.dropoffLocation) {
-      Alert.alert("Missing Locations", "Please select a pickup and destination first.");
-      return;
-    }
-
-    setIsSearching(true);
-
+  const requestRideAllocation = async (orderId, paymentId) => {
     const ridePayload = {
       passengerId: "6a28fac827c86bf2fdbcd628", 
       pickupLocation: props.pickupLocation, 
       dropoffLocation: props.dropoffLocation, 
       stopLocation: props.stopLocation,
       vehicleType: selectedType,
-      promoCode: isPromoApplied ? promoText : null
+      promoCode: isPromoApplied ? promoText : null,
+      paymentMethod,
+      razorpayOrderId: orderId,
+      razorpayPaymentId: paymentId,
+      paymentStatus: paymentMethod === 'ONLINE' ? 'PAID' : 'PENDING'
     };
 
     try {
-      console.log(`🚖 Requesting allocation for: ${selectedType}`);
+      console.log(`🚖 Requesting allocation for: ${selectedType} (Payment: ${paymentMethod})`);
       const response = await axios.post('http://4.240.25.27:5000/api/rides/request-ride', ridePayload);
 
       if (response.data.success) {
         const { ride, driver } = response.data; 
         
-        // 🔥 CRITICAL: Bubble the generated ride ID up to the parent SearchResults container
+        // Bubble the generated ride ID up to the parent SearchResults container
         if (props.onRideCreated) {
           props.onRideCreated(ride);
         }
@@ -132,13 +133,12 @@ const UberTypes = (props) => {
         if (driver) {
           Alert.alert(
             "Velo Match Confirmed! 🎉",
-            `Driver: ${driver.fullname}\nVehicle: ${driver.vehicle?.color || ''} ${driver.vehicle?.carModel || ''}\nPlate Number: ${driver.vehicle?.plateNumber || ''}\n\nFinal Price: Rupee ${ride.fare}`
+            `Driver: ${driver.fullname}\nVehicle: ${driver.vehicle?.color || ''} ${driver.vehicle?.carModel || ''}\n\nPrice: ₹${ride.fare}`
           );
         } else {
-          // ✨ Cleaned and polished for your Manager Presentation!
           Alert.alert(
             "Booking Registered! ⏳",
-            `Searching for available local drivers...\n\nPrice: Rupee ${ride.fare}`
+            `Searching for available local drivers...\n\nPrice: ₹${ride.fare}`
           );
         }
       }
@@ -147,6 +147,84 @@ const UberTypes = (props) => {
       Alert.alert("Booking Engine Error", "Could not complete your ride request.");
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const confirm = async () => {
+    if (!props.pickupLocation || !props.dropoffLocation) {
+      Alert.alert("Missing Locations", "Please select a pickup and destination first.");
+      return;
+    }
+
+    const currentEstimate = getFrontendEstimate(selectedType, props.pickupLocation, props.dropoffLocation, props.stopLocation);
+    const finalFare = Math.max(50, currentEstimate - discountAmt);
+
+    setIsSearching(true);
+
+    if (paymentMethod === 'ONLINE') {
+      try {
+        console.log(`💳 [Billing Engine] Initializing online order for ₹${finalFare}`);
+        // Step 1: Hit backend to create Razorpay Order
+        const orderResponse = await axios.post('http://4.240.25.27:5000/api/payments/create-order', {
+          amount: finalFare
+        });
+
+        if (orderResponse.data.success) {
+          const { orderId, keyId } = orderResponse.data;
+
+          // Step 2: Trigger Razorpay checkout sheet
+          const options = {
+            description: `Velo Trip - ${selectedType}`,
+            image: 'https://cdn.razorpay.com/logos/BUV4ws3thSgVH5_medium.png',
+            currency: 'INR',
+            key: keyId,
+            amount: Math.round(finalFare * 100),
+            name: 'Velo Cab Services',
+            order_id: orderId,
+            prefill: {
+              email: 'passenger@velo.com',
+              contact: '9999999999',
+              name: 'Passenger'
+            },
+            theme: { color: '#0F172A' }
+          };
+
+          RazorpayCheckout.open(options).then(async (data) => {
+            console.log("✅ Razorpay payment succeeded:", data.razorpay_payment_id);
+            
+            // Step 3: Verify signature on server
+            try {
+              const verifyResponse = await axios.post('http://4.240.25.27:5000/api/payments/verify-payment', {
+                razorpay_order_id: data.razorpay_order_id,
+                razorpay_payment_id: data.razorpay_payment_id,
+                razorpay_signature: data.razorpay_signature
+              });
+
+              if (verifyResponse.data.success) {
+                // Verified successfully, register allocation!
+                requestRideAllocation(orderId, data.razorpay_payment_id);
+              } else {
+                Alert.alert("Payment Failed ❌", "Verification signature invalid.");
+                setIsSearching(false);
+              }
+            } catch (err) {
+              Alert.alert("Verification Error", "Failed to check signatures on server.");
+              setIsSearching(false);
+            }
+          }).catch((error) => {
+            console.log("❌ Razorpay checkout cancelled:", error.description);
+            Alert.alert("Payment Cancelled ⚠️", "Transaction was aborted by the user.");
+            setIsSearching(false);
+          });
+        }
+      } catch (error) {
+        console.error("Order ID fetch failed:", error.message);
+        Alert.alert("Gateway Error ❌", "Could not initialize payment order.");
+        setIsSearching(false);
+      }
+    } else {
+      // CASH payment (bypass SDK checkouts)
+      requestRideAllocation(null, null);
     }
   };
 
@@ -224,6 +302,66 @@ const UberTypes = (props) => {
           🎉 Applied: {appliedPromoDesc} (Discount: -₹{discountAmt})
         </Text>
       )}
+
+      {/* 💳 PAYMENT METHOD TOGGLE SELECTOR */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#F8FAFC',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        borderRadius: 10,
+        marginHorizontal: 10,
+        marginVertical: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+      }}>
+        <Text style={{ fontSize: 13, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+          Payment Method
+        </Text>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Pressable 
+            onPress={() => setPaymentMethod('CASH')}
+            style={{
+              backgroundColor: paymentMethod === 'CASH' ? '#0F172A' : '#FFFFFF',
+              borderColor: paymentMethod === 'CASH' ? '#0F172A' : '#CBD5E1',
+              borderWidth: 1,
+              borderRadius: 6,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+            }}
+          >
+            <Text style={{ 
+              color: paymentMethod === 'CASH' ? '#FFFFFF' : '#0F172A', 
+              fontSize: 12, 
+              fontWeight: '800' 
+            }}>
+              💵 Cash
+            </Text>
+          </Pressable>
+
+          <Pressable 
+            onPress={() => setPaymentMethod('ONLINE')}
+            style={{
+              backgroundColor: paymentMethod === 'ONLINE' ? '#0F172A' : '#FFFFFF',
+              borderColor: paymentMethod === 'ONLINE' ? '#0F172A' : '#CBD5E1',
+              borderWidth: 1,
+              borderRadius: 6,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+            }}
+          >
+            <Text style={{ 
+              color: paymentMethod === 'ONLINE' ? '#FFFFFF' : '#0F172A', 
+              fontSize: 12, 
+              fontWeight: '800' 
+            }}>
+              💳 Pay Online
+            </Text>
+          </Pressable>
+        </View>
+      </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginVertical: 8 }}>
         <Pressable 

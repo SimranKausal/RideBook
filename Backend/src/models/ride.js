@@ -42,7 +42,25 @@ const RideSchema = new mongoose.Schema({
     senderId: { type: String },
     text: { type: String },
     timestamp: { type: Date, default: Date.now }
-  }]
+  }],
+  paymentMethod: {
+    type: String,
+    enum: ['CASH', 'ONLINE'],
+    default: 'CASH'
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['PENDING', 'PAID', 'FAILED'],
+    default: 'PENDING'
+  },
+  razorpayOrderId: {
+    type: String,
+    default: null
+  },
+  razorpayPaymentId: {
+    type: String,
+    default: null
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Ride', RideSchema);
