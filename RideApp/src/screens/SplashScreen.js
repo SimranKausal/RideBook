@@ -9,6 +9,7 @@ export default function SplashScreen({ navigation }) {
   const scaleAnim = useRef(new Animated.Value(0.4)).current;    // Zoom in the logo
   const slideAnim = useRef(new Animated.Value(40)).current;     // Slide up the logo
   const taglineFade = useRef(new Animated.Value(0)).current;    // Delayed fade in for tagline
+  const taglineSlide = useRef(new Animated.Value(15)).current;   // Slide up for tagline
   const spinnerFade = useRef(new Animated.Value(0)).current;    // Delayed fade in for loading spinner
 
   useEffect(() => {
@@ -23,8 +24,8 @@ export default function SplashScreen({ navigation }) {
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
-          friction: 6,
-          tension: 40,
+          friction: 3.5,
+          tension: 50,
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
@@ -37,6 +38,11 @@ export default function SplashScreen({ navigation }) {
       Animated.parallel([
         Animated.timing(taglineFade, {
           toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(taglineSlide, {
+          toValue: 0,
           duration: 600,
           useNativeDriver: true,
         }),
@@ -83,7 +89,13 @@ export default function SplashScreen({ navigation }) {
         <Text style={styles.logoText}>VELO</Text>
       </Animated.View>
 
-      <Animated.View style={[styles.taglineContainer, { opacity: taglineFade }]}>
+      <Animated.View style={[
+        styles.taglineContainer, 
+        { 
+          opacity: taglineFade,
+          transform: [{ translateY: taglineSlide }]
+        }
+      ]}>
         <Text style={styles.tagline}>Your Ride, Simplified.</Text>
       </Animated.View>
 

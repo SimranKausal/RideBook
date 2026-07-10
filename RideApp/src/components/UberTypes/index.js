@@ -103,15 +103,10 @@ const UberTypes = (props) => {
             key={item.id} 
             onPress={() => setSelectedType(item.type)}
             style={{
-              backgroundColor: isCurrentSelection ? '#efefef' : '#ffffff', 
-              borderWidth: isCurrentSelection ? 1 : 0,
-              borderColor: '#000000',
-              borderRadius: 8,
-              marginHorizontal: 5,
-              marginVertical: 2
+              marginVertical: 1,
             }}
           >
-            <UberTypeRow type={modifiedItem} />
+            <UberTypeRow type={modifiedItem} isSelected={isCurrentSelection} />
           </Pressable>
         );
       })}

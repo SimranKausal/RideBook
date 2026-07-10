@@ -1,9 +1,9 @@
+import React from 'react';
 import { View, Text, Image } from 'react-native';
 import styles from "./styles";
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const UberTypeRow = (props) => {
-  const {type} = props;
+  const { type, isSelected } = props;
 
   const getImage = () => {
     if (type.type === 'Velo Go') {
@@ -28,23 +28,37 @@ const UberTypeRow = (props) => {
     return require('../../assets/images/veloGo.jpeg'); // fallback
   };
 
-  return (
-    <View style={styles.container}>
+  const getCapacity = () => {
+    if (type.type.includes('XL') || type.type.includes('Plus')) return 6;
+    return 4;
+  };
 
+  return (
+    <View style={[
+      styles.container,
+      isSelected && { borderColor: '#3B82F6', backgroundColor: '#F8FAFC', borderWidth: 1.5 }
+    ]}>
+      
       <Image style={styles.image} source={getImage()} />
 
       <View style={styles.middleContainer}>
-        <Text style={styles.type}>{type.type}
-         
-          <MaterialIcons name={'person'} size={23} /> 3
-        </Text>
-
-        <Text style={styles.time}>8:03pm Dropoff</Text>
+        <View style={styles.typeRow}>
+          <Text style={styles.type}>{type.type}</Text>
+          <Text style={styles.capacity}>👤 {getCapacity()}</Text>
+        </View>
+        <Text style={styles.time}>Nearby Dropoff</Text>
       </View>
 
       <View style={styles.rightContainer}>
-        <MaterialIcons name={"sell"} size={25} color={'#42d742'} />
-        <Text style={styles.price}> est.₹{type.price}</Text>
+        <View style={[
+          styles.priceBadge,
+          isSelected && { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }
+        ]}>
+          <Text style={[
+            styles.price,
+            isSelected && { color: '#1E40AF' }
+          ]}>₹{type.price}</Text>
+        </View>
       </View>
 
     </View>

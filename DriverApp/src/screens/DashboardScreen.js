@@ -411,15 +411,30 @@ export default function DashboardScreen({ route }) {
 
       {/* 🚖 ACTIVE TRIP DRAWER PANEL */}
       {activeRide && (
-        <View style={styles.activeRidePanel}>
-          <Text style={styles.activeRideHeader}>
-            {activeRide.status === 'ACCEPTED' ? 'Heading to Pickup 🚗' : 'Active Trip in Progress 🏁'}
-          </Text>
+        <View style={[
+          styles.activeRidePanel, 
+          activeRide.status === 'ON_TRIP' && { borderColor: '#10B981' }
+        ]}>
+          
+          {/* Neon Status Badge Indicator */}
+          <View style={styles.statusHeaderRow}>
+            {activeRide.status === 'ACCEPTED' ? (
+              <View style={styles.neonBadgeAccepted}>
+                <View style={styles.neonDotBlue} />
+                <Text style={styles.neonBadgeTextBlue}>HEADING TO PICKUP</Text>
+              </View>
+            ) : (
+              <View style={styles.neonBadgeOnTrip}>
+                <View style={styles.neonDotGreen} />
+                <Text style={styles.neonBadgeTextGreen}>TRIP IN PROGRESS</Text>
+              </View>
+            )}
+          </View>
 
           {activeRide.status === 'ACCEPTED' && (
             <View style={styles.etaContainer}>
               <Text style={styles.etaText}>
-                🟢 Passenger is <Text style={{fontWeight:'800', color: '#10B981'}}>{calculateDistanceAndEta()?.distance || '0.0'} km</Text> away (approx. <Text style={{fontWeight:'800', color: '#10B981'}}>{calculateDistanceAndEta()?.eta || '0'} mins</Text>)
+                Passenger is <Text style={{fontWeight:'800', color: '#38BDF8'}}>{calculateDistanceAndEta()?.distance || '0.0'} km</Text> away (approx. <Text style={{fontWeight:'800', color: '#38BDF8'}}>{calculateDistanceAndEta()?.eta || '0'} mins</Text>)
               </Text>
             </View>
           )}
@@ -636,18 +651,69 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     backgroundColor: '#0F172A',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
-    borderWidth: 1,
-    borderColor: '#3B82F6', // Blue Border when Active
+    borderWidth: 1.5,
+    borderColor: '#38BDF8', // Sky-blue border
     elevation: 10,
   },
-  activeRideHeader: {
-    color: '#FFFFFF',
-    fontSize: 18,
+  statusHeaderRow: {
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  neonBadgeAccepted: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F263E',
+    borderColor: '#1E40AF',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  neonDotBlue: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#38BDF8',
+    marginRight: 8,
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+  neonBadgeTextBlue: {
+    color: '#38BDF8',
+    fontSize: 11,
     fontWeight: '800',
-    marginBottom: 16,
-    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  neonBadgeOnTrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#064E3B',
+    borderColor: '#065F46',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  neonDotGreen: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 8,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+  neonBadgeTextGreen: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   addressContainer: {
     backgroundColor: '#1E293B',
