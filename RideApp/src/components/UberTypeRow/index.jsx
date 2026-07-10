@@ -27,11 +27,13 @@ const UberTypeRow = (props) => {
 
     return require('../../assets/images/veloGo.jpeg'); // fallback
   };
-
   const getCapacity = () => {
-    if (type.type.includes('XL') || type.type.includes('Plus')) return 6;
-    return 4;
+    if (type.type.includes('XL')) return { seats: 6, bags: 4 };
+    if (type.type.includes('Plus')) return { seats: 4, bags: 3 };
+    return { seats: 4, bags: 2 };
   };
+
+  const info = getCapacity();
 
   return (
     <View style={[
@@ -44,11 +46,10 @@ const UberTypeRow = (props) => {
       <View style={styles.middleContainer}>
         <View style={styles.typeRow}>
           <Text style={styles.type}>{type.type}</Text>
-          <Text style={styles.capacity}>👤 {getCapacity()}</Text>
+          <Text style={styles.capacity}>👤 {info.seats}</Text>
         </View>
-        <Text style={styles.time}>Nearby Dropoff</Text>
+        <Text style={styles.time}>🧳 {info.bags} Bags max • Nearby Dropoff</Text>
       </View>
-
       <View style={styles.rightContainer}>
         <View style={[
           styles.priceBadge,
