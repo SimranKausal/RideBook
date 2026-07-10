@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Platform, PermissionsAndroid } from 'react-native';
 import MapView from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 
@@ -7,8 +7,36 @@ const HomeMap = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Query actual passenger GPS coordinates on boot
+  const requestAndroidPermissionAndGetLocation = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: "Location Permission",
+            message: "Velo needs access to your location to set your pickup point.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getCurrentLocation();
+        } else {
+          loadFallback();
+        }
+      } else {
+        // iOS handles permission checks at plist configuration level
+        getCurrentLocation();
+      }
+    } catch (err) {
+      console.warn(err);
+      loadFallback();
+    }
+  };
+
+  const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -22,17 +50,24 @@ const HomeMap = () => {
       },
       (error) => {
         console.log("❌ [HomeMap GPS Error] Could not fetch coordinates:", error.message);
-        // Fallback to New Delhi default if GPS permissions or services are disabled
-        setUserLocation({
-          latitude: 28.6139,
-          longitude: 77.2090,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
-        setLoading(false);
+        loadFallback();
       },
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
+  };
+
+  const loadFallback = () => {
+    setUserLocation({
+      latitude: 28.6139,
+      longitude: 77.2090,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    requestAndroidPermissionAndGetLocation();
   }, []);
 
   if (loading) {
