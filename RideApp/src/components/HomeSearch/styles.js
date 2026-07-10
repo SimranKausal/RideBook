@@ -8,11 +8,12 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 16,
     paddingBottom: 24,
+    // Soft drop shadow for premium elevation
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 10,
   },
   slideIndicator: {
     width: 40,
@@ -22,90 +23,71 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 16,
   },
-  searchBarCapsule: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 30,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    marginBottom: 20,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  searchIcon: {
-    fontSize: 16,
-    color: '#64748B',
-    marginRight: 10,
-  },
-  searchText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#334155',
-    marginBottom: 12,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  gridCard: {
-    flex: 1,
-    height: 100,
-    backgroundColor: '#F8FAFC',
+  inputBox: {
+    backgroundColor: '#F1F5F9', // Light Slate-100
     borderRadius: 16,
-    padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0', // Slate-200
   },
-  cardHeader: {
-    flex: 1.5,
-    justifyContent: 'flex-start',
+  inputText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0F172A', // Deep Slate-900
+    letterSpacing: 0.5,
   },
-  cardSub: {
-    fontSize: 11,
-    color: '#64748B',
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  timeText: {
+    fontSize: 13,
     fontWeight: '600',
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '800',
     color: '#0F172A',
   },
-  offersBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#DEF7EC',
-    borderColor: '#31C48D',
-    borderWidth: 0.5,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginBottom: 4,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9', // Divider color
   },
-  offersBadgeText: {
-    color: '#03543F',
-    fontSize: 9,
-    fontWeight: '800',
+  iconContainer: {
+    backgroundColor: '#F1F5F9',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    marginRight: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cardGraphic: {
-    fontSize: 34,
-    alignSelf: 'flex-end',
+  homeIconContainer: {
+    backgroundColor: '#EFF6FF', // Light blue background for Home
+  },
+  destinationText: {
+    fontWeight: '600',
+    fontSize: 15,
+    color: '#1E293B', // Slate-800
+  },
+  subText: {
+    fontSize: 12,
+    color: '#64748B', // Slate-500
+    marginTop: 2,
+  },
+  textContainer: {
     flex: 1,
-    textAlign: 'right',
-  },
+  }
 });
 
 export default styles;
