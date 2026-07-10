@@ -5,7 +5,7 @@ import { StyleSheet, View, Text, Platform } from 'react-native';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE';
 
-const RouteMap = ({ origin, destination, driverLocation }) => {
+const RouteMap = ({ origin, destination, waypoints, driverLocation }) => {
   const mapRef = useRef(null);
 
   const [routeStrokeWidth, setRouteStrokeWidth] = useState(4);
@@ -113,6 +113,15 @@ const RouteMap = ({ origin, destination, driverLocation }) => {
         </Marker>
       )}
 
+      {/* 🛑 Waypoint Stop Markers */}
+      {waypoints && waypoints.length > 0 && waypoints.map((wp, index) => (
+        <Marker key={index} coordinate={wp} anchor={{ x: 0.5, y: 0.5 }}>
+          <View style={styles.stopMarker}>
+            <Text style={{ fontSize: 8, color: 'white', fontWeight: '900' }}>S</Text>
+          </View>
+        </Marker>
+      ))}
+
       {/* 🚘 THE HIGH-CONTRAST IDLE DRIVERS LOOP FROM MONGO DB */}
       {idleDrivers.map((driver) => {
         if (!driver.currentLocation?.latitude || !driver.currentLocation?.longitude) return null;
@@ -152,6 +161,7 @@ const RouteMap = ({ origin, destination, driverLocation }) => {
         <MapViewDirections
           origin={originCoordinate}
           destination={destinationCoordinate}
+          waypoints={waypoints}
           apikey={GOOGLE_MAPS_APIKEY}
           strokeWidth={routeStrokeWidth}
           strokeColor={routeColor}
@@ -165,7 +175,18 @@ const styles = StyleSheet.create({
   map: { width: '100%', height: '100%' },
   pickupMarkerOuter: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff', elevation: 5 },
   pickupMarkerInner: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' },
-  destinationMarker: { width: 14, height: 14, backgroundColor: '#000', borderWidth: 2, borderColor: '#fff', elevation: 5 }
+  destinationMarker: { width: 14, height: 14, backgroundColor: '#000', borderWidth: 2, borderColor: '#fff', elevation: 5 },
+  stopMarker: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#F59E0B', // Amber stop dot
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    elevation: 5,
+  }
 });
 
 export default RouteMap;

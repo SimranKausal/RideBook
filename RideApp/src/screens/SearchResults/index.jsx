@@ -12,7 +12,7 @@ const DEFAULT_LNG = 77.3769;
 const SearchResults = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { originPlace, destinationPlace } = route.params || {};
+  const { originPlace, destinationPlace, stopPlace } = route.params || {};
 
   const [isDriving, setIsDriving] = useState(false);
   
@@ -275,6 +275,10 @@ const SearchResults = () => {
         <RouteMap 
           origin={originPlace} 
           destination={destinationPlace} 
+          waypoints={stopPlace?.details?.geometry?.location || stopPlace?.geometry?.location ? [{
+            latitude: (stopPlace?.details?.geometry?.location || stopPlace?.geometry?.location).lat,
+            longitude: (stopPlace?.details?.geometry?.location || stopPlace?.geometry?.location).lng
+          }] : []}
           isDriving={isDriving} 
           setIsDriving={setIsDriving}
           driverLocation={driverPos}
@@ -316,6 +320,7 @@ const SearchResults = () => {
               <UberTypes 
                 pickupLocation={pickupLocation} 
                 dropoffLocation={dropoffLocation} 
+                stopLocation={stopPlace}
                 triggerMovement={() => setIsDriving(true)}
                 onRideCreated={handleRideCreated}
                 onPressBookForLater={(vehicleType) => {

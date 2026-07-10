@@ -18,15 +18,30 @@ const calculateHaversineDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 // 💰 2. Frontend estimate calculator matching the backend logic completely
-const getFrontendEstimate = (type, pickup, dropoff) => {
-  if (!pickup?.latitude || !dropoff?.latitude) return 50;
+const getFrontendEstimate = (type, pickup, dropoff, stop) => {
+  if (!pickup || !dropoff) return 50;
 
-  const distanceKm = calculateHaversineDistance(
-    pickup.latitude, 
-    pickup.longitude, 
-    dropoff.latitude, 
-    dropoff.longitude
-  );
+  const getLatLng = (loc) => {
+    if (!loc) return null;
+    if (loc.latitude) return { lat: loc.latitude, lng: loc.longitude };
+    if (loc.details?.geometry?.location) return { lat: loc.details.geometry.location.lat, lng: loc.details.geometry.location.lng };
+    if (loc.geometry?.location) return { lat: loc.geometry.location.lat, lng: loc.geometry.location.lng };
+    return null;
+  };
+
+  const p = getLatLng(pickup);
+  const d = getLatLng(dropoff);
+  const s = getLatLng(stop);
+
+  if (!p || !d) return 50;
+
+  let distanceKm = 0;
+  if (s) {
+    distanceKm = calculateHaversineDistance(p.lat, p.lng, s.lat, s.lng) + 
+                 calculateHaversineDistance(s.lat, s.lng, d.lat, d.lng);
+  } else {
+    distanceKm = calculateHaversineDistance(p.lat, p.lng, d.lat, d.lng);
+  }
   
   let ratePerKm = 15; // Velo Go
   if (type === 'Velo Plus') ratePerKm = 22;
@@ -61,7 +76,7 @@ const UberTypes = (props) => {
       return;
     }
 
-    const currentEstimate = getFrontendEstimate(selectedType, props.pickupLocation, props.dropoffLocation);
+    const currentEstimate = getFrontendEstimate(selectedType, props.pickupLocation, props.dropoffLocation, props.stopLocation);
 
     try {
       const response = await axios.post('http://4.240.25.27:5000/api/rides/validate-promo', {
@@ -93,6 +108,7 @@ const UberTypes = (props) => {
       passengerId: "6a28fac827c86bf2fdbcd628", 
       pickupLocation: props.pickupLocation, 
       dropoffLocation: props.dropoffLocation, 
+      stopLocation: props.stopLocation,
       vehicleType: selectedType,
       promoCode: isPromoApplied ? promoText : null
     };
@@ -138,7 +154,7 @@ const UberTypes = (props) => {
     <View>
       {typesdata.map((item) => {
         const isCurrentSelection = item.type === selectedType;
-        const dynamicPrice = getFrontendEstimate(item.type, props.pickupLocation, props.dropoffLocation);
+        const dynamicPrice = getFrontendEstimate(item.type, props.pickupLocation, props.dropoffLocation, props.stopLocation);
         const modifiedItem = { ...item, price: dynamicPrice };
         
         return (

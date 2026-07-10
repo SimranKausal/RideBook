@@ -27,9 +27,12 @@ const savedPlaces = [
 const DestinationSearch = () => {
   const [originPlace, setOriginPlace] = useState(null);
   const [destinationPlace, setDestinationPlace] = useState(null);
-  const [activeInput, setActiveInput] = useState('origin'); // origin or destination
+  const [activeInput, setActiveInput] = useState('origin'); // origin, stop, or destination
+  const [stopPlace, setStopPlace] = useState(null);
+  const [showStopInput, setShowStopInput] = useState(false);
   
   const originRef = useRef(null);
+  const stopRef = useRef(null);
   const destinationRef = useRef(null);
   const navigation = useNavigation();
 
@@ -78,6 +81,16 @@ const DestinationSearch = () => {
     if (activeInput === 'origin') {
       setOriginPlace(formattedPlace);
       originRef.current?.setAddressText(place.title);
+      if (showStopInput) {
+        stopRef.current?.focus();
+        setActiveInput('stop');
+      } else {
+        destinationRef.current?.focus();
+        setActiveInput('destination');
+      }
+    } else if (activeInput === 'stop') {
+      setStopPlace(formattedPlace);
+      stopRef.current?.setAddressText(place.title);
       destinationRef.current?.focus();
       setActiveInput('destination');
     } else {
@@ -90,7 +103,8 @@ const DestinationSearch = () => {
     if (originPlace && destinationPlace) {
       navigation.navigate('SearchResults', {
         originPlace,
-        destinationPlace
+        destinationPlace,
+        stopPlace
       });
     }
   }, [originPlace, destinationPlace]);
@@ -160,6 +174,66 @@ const DestinationSearch = () => {
                 }}
               />
             </View>
+
+            {/* ➕ Add Stop trigger button */}
+            {!showStopInput && (
+              <TouchableOpacity 
+                style={localStyles.addStopTrigger}
+                onPress={() => {
+                  setShowStopInput(true);
+                  setActiveInput('stop');
+                }}
+              >
+                <Text style={localStyles.addStopTriggerText}>➕ Add Stop along route</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* 🛑 Input Middle Stop (conditional) */}
+            {showStopInput && (
+              <View style={{ zIndex: activeInput === 'stop' ? 100 : 1, position: 'relative', flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1 }}>
+                  <GooglePlacesAutocomplete
+                    ref={stopRef}
+                    placeholder='Add Stop...'
+                    onPress={(data, details = null) => {
+                      setStopPlace({ data, details });
+                      destinationRef.current?.focus();
+                      setActiveInput('destination');
+                    }}
+                    enablePoweredByContainer={false}
+                    minLength={2}
+                    fetchDetails={true}
+                    nearbyPlacesAPI="GooglePlacesSearch"  
+                    debounce={400}
+                    textInputProps={{
+                      onFocus: () => setActiveInput('stop')
+                    }}
+                    query={{
+                      key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
+                      language: 'en',
+                    }}
+                    renderRow={(data) => <PlaceRow data={data} />}
+                    styles={{
+                      container: localStyles.autocompleteContainer,
+                      textInput: localStyles.textInput,
+                      listView: [localStyles.listView, { top: 44 }], 
+                      row: localStyles.listRow,
+                      separator: localStyles.rowSeparator,
+                    }}
+                  />
+                </View>
+                <TouchableOpacity 
+                  style={localStyles.removeStopBtn}
+                  onPress={() => {
+                    setShowStopInput(false);
+                    setStopPlace(null);
+                    setActiveInput('destination');
+                  }}
+                >
+                  <Text style={{ fontSize: 18, color: '#EF4444', fontWeight: '800', marginLeft: 8 }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             
             {/* Input 2: WHERE TO (Z-Index focus wrapper) */}
             <View style={{ zIndex: activeInput === 'destination' ? 100 : 1, position: 'relative' }}>
@@ -381,6 +455,21 @@ const localStyles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
+  },
+  addStopTrigger: {
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+    marginLeft: 4,
+  },
+  addStopTriggerText: {
+    color: '#3B82F6',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  removeStopBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
   },
 });
 

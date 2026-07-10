@@ -31,11 +31,21 @@ router.post('/request-ride', async (req, res) => {
     const dropoffLat = dropoffLocation?.latitude;
     const dropoffLon = dropoffLocation?.longitude;
     
+    const stopLat = req.body.stopLocation?.latitude || req.body.stopLocation?.details?.geometry?.location?.lat;
+    const stopLon = req.body.stopLocation?.longitude || req.body.stopLocation?.details?.geometry?.location?.lng;
+    
     const selectedVehicle = vehicleType || 'Velo Go'; 
 
     // 🧠 Step A: Dynamic Distance & Fare Matrix Engine Calculation
-    const distanceKm = calculateDistance(pickupLat, pickupLon, dropoffLat, dropoffLon);
-    console.log(`📏 Calculated Trip Distance: ${distanceKm.toFixed(2)} km`);
+    let distanceKm = 0;
+    if (stopLat && stopLon) {
+      distanceKm = calculateDistance(pickupLat, pickupLon, stopLat, stopLon) +
+                   calculateDistance(stopLat, stopLon, dropoffLat, dropoffLon);
+      console.log(`📏 Calculated Trip Distance with Stop: ${distanceKm.toFixed(2)} km`);
+    } else {
+      distanceKm = calculateDistance(pickupLat, pickupLon, dropoffLat, dropoffLon);
+      console.log(`📏 Calculated Trip Distance: ${distanceKm.toFixed(2)} km`);
+    }
 
     let ratePerKm = 15; 
     if (selectedVehicle === 'Velo Plus') ratePerKm = 22;
