@@ -35,6 +35,10 @@ const SearchResults = () => {
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [selectedAmPm, setSelectedAmPm] = useState('AM');
 
+  // ⭐️ Star Rating states
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(5);
+
   const socketRef = useRef(null);
 
   // ✨ Rectified: Coordinates fall back instantly to real numbers so placeholder states don't freeze
@@ -76,18 +80,7 @@ const SearchResults = () => {
           navigation.navigate('HomeScreen');
         } else if (data.status === 'COMPLETED') {
           setRideStatus('COMPLETED');
-          Alert.alert(
-            "Trip Completed! 🎉",
-            `Thank you for riding with Velo!\nTotal Fare: ₹${data.fare || 0}`,
-            [
-              { 
-                text: "OK", 
-                onPress: () => {
-                  navigation.navigate('HomeScreen');
-                } 
-              }
-            ]
-          );
+          setShowRatingModal(true);
         }
 
         // Handle live tracking/ETA calculations
@@ -237,6 +230,29 @@ const SearchResults = () => {
       }
     } catch (error) {
       Alert.alert("Scheduling Error", "Could not complete your scheduled ride request.");
+    }
+  };
+
+  // Submits 1-5 star review to backend rate-driver endpoint
+  const handleSubmitRating = async () => {
+    try {
+      const response = await fetch('http://4.240.25.27:5000/api/rides/rate-driver', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rideId: currentRideId,
+          rating: selectedRating
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert("Thank you! ❤️", "Your feedback helps keep the Velo community safe and friendly.");
+      }
+    } catch (error) {
+      console.log("Error submitting rating:", error.message);
+    } finally {
+      setShowRatingModal(false);
+      navigation.navigate('HomeScreen');
     }
   };
 
@@ -448,6 +464,71 @@ const SearchResults = () => {
 
             <TouchableOpacity style={styles.closePickerBtn} onPress={() => setShowDatePicker(false)}>
               <Text style={styles.closePickerBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ⭐️ RATE YOUR DRIVER MODAL */}
+      <Modal visible={showRatingModal} animationType="slide" transparent={true}>
+        <View style={styles.ratingOverlay}>
+          <View style={styles.ratingCard}>
+            <Text style={styles.ratingHeaderText}>Rate Your Ride ⭐️</Text>
+            
+            {matchedDriver ? (
+              <View style={styles.ratingDriverInfo}>
+                {matchedDriver.profilePhoto ? (
+                  <Image source={{ uri: matchedDriver.profilePhoto }} style={styles.ratingDriverPhoto} />
+                ) : (
+                  <View style={[styles.ratingDriverPhoto, { backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ fontSize: 24 }}>👤</Text>
+                  </View>
+                )}
+                <Text style={styles.ratingDriverName}>{matchedDriver.fullname || 'Driver'}</Text>
+                <Text style={styles.ratingDriverCar}>{matchedDriver.vehicle?.color} {matchedDriver.vehicle?.carModel}</Text>
+              </View>
+            ) : (
+              <Text style={styles.ratingSubText}>How was your trip with Velo?</Text>
+            )}
+
+            {/* Stars selection row */}
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity 
+                  key={star} 
+                  onPress={() => setSelectedRating(star)}
+                  style={styles.starTouch}
+                >
+                  <Text style={[
+                    styles.starIcon,
+                    star <= selectedRating ? styles.starIconActive : styles.starIconInactive
+                  ]}>
+                    ★
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Feedback tag badges */}
+            <Text style={styles.feedbackLabel}>What went well?</Text>
+            <View style={styles.feedbackRow}>
+              {['Safe Driving', 'Clean Car', 'Polite', 'Great Music'].map((tag) => (
+                <View key={tag} style={styles.feedbackTag}>
+                  <Text style={styles.feedbackTagText}>✓ {tag}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Submit buttons */}
+            <TouchableOpacity style={styles.submitRatingBtn} onPress={handleSubmitRating}>
+              <Text style={styles.submitRatingBtnText}>Submit Rating & Close</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.skipRatingBtn} onPress={() => {
+              setShowRatingModal(false);
+              navigation.navigate('HomeScreen');
+            }}>
+              <Text style={styles.skipRatingBtnText}>Skip</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -926,6 +1007,128 @@ const styles = StyleSheet.create({
   closePickerBtnText: {
     color: '#64748B',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  ratingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  ratingCard: {
+    width: '100%',
+    backgroundColor: '#0F172A', // Slate-900 matching
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1.5,
+    borderColor: '#1E293B',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  ratingHeaderText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  ratingDriverInfo: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  ratingDriverPhoto: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: '#38BDF8',
+    marginBottom: 8,
+  },
+  ratingDriverName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  ratingDriverCar: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  ratingSubText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginVertical: 12,
+  },
+  starTouch: {
+    padding: 4,
+  },
+  starIcon: {
+    fontSize: 40,
+    fontWeight: '900',
+  },
+  starIconActive: {
+    color: '#FBBF24', // Amber-400 gold stars
+  },
+  starIconInactive: {
+    color: '#334155', // Slate-700 gray stars
+  },
+  feedbackLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#38BDF8',
+    textTransform: 'uppercase',
+    marginTop: 16,
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  feedbackRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  feedbackTag: {
+    backgroundColor: '#1E293B',
+    borderRadius: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  feedbackTagText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  submitRatingBtn: {
+    backgroundColor: '#38BDF8',
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  submitRatingBtnText: {
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  skipRatingBtn: {
+    paddingVertical: 8,
+  },
+  skipRatingBtnText: {
+    color: '#64748B',
+    fontSize: 13,
     fontWeight: '600',
   },
 });

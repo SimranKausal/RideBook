@@ -425,6 +425,47 @@ router.get('/trips/history/:id', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
+// ⭐️ 10. POST Route: Submit passenger rating for a completed ride and update Driver aggregate rating
+router.post('/rate-driver', async (req, res) => {
+  const { rideId, rating } = req.body;
+  if (!rideId || !rating) {
+    return res.status(400).json({ success: false, message: 'Missing rideId or rating parameters.' });
+  }
+
+  try {
+    const ride = await Ride.findById(rideId);
+    if (!ride) {
+      return res.status(404).json({ success: false, message: 'Ride not found.' });
+    }
+
+    if (!ride.driverId) {
+      return res.status(400).json({ success: false, message: 'No driver associated with this ride.' });
+    }
+
+    // Update Driver aggregate rating
+    const driver = await Driver.findById(ride.driverId);
+    if (driver) {
+      const oldCount = driver.ratingCount || 0;
+      const oldRating = driver.rating || 5.0;
+      
+      const newCount = oldCount + 1;
+      const newRating = parseFloat((((oldRating * oldCount) + parseFloat(rating)) / newCount).toFixed(1));
+      
+      driver.rating = newRating;
+      driver.ratingCount = newCount;
+      await driver.save();
+      
+      console.log(`⭐️ [Rating Engine] Rated Driver: ${driver.fullname}. New rating: ${newRating} (${newCount} reviews)`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Rating logged successfully.'
+    });
+  } catch (error) {
+    console.error("❌ Rating Error:", error.message);
+    return res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 module.exports = router;

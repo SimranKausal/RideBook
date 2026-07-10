@@ -14,7 +14,9 @@ const DriverSchema = new mongoose.Schema({
     longitude: { type: Number, default: 77.2403 }
   },
   isAvailable: { type: Boolean, default: true },     // Toggle for matching engine
-  profilePhoto: { type: String, default: "avatar_1" } // Selected driver avatar
+  profilePhoto: { type: String, default: "avatar_1" }, // Selected driver avatar
+  rating: { type: Number, default: 5.0 },              // Average star rating
+  ratingCount: { type: Number, default: 0 }           // Total ratings submitted
 }, { timestamps: true });
 
 module.exports = mongoose.models.Driver || mongoose.model('Driver', DriverSchema);
