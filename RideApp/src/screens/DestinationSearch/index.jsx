@@ -1,29 +1,90 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, ScrollView, Alert } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import Geolocation from '@react-native-community/geolocation';
 import PlaceRow from "./PlaceRow";
 
 // ✅ CRITICAL: Required for GooglePlacesAutocomplete to access location services
 navigator.geolocation = require('@react-native-community/geolocation');
 
+// Realistic coordinates centered in New Delhi / Gurugram
 const homePlace = {
   description: 'Home',
-  geometry: { location: { lat: 48.8152937, lng: 2.4597668 } },
+  geometry: { location: { lat: 28.6304, lng: 77.2177 } },
 };
 const workPlace = {
   description: 'Work',
-  geometry: { location: { lat: 48.8496818, lng: 2.2940881 } },
+  geometry: { location: { lat: 28.4952, lng: 77.0878 } },
 };
+
+const savedPlaces = [
+  { id: '1', icon: '🏠', title: 'Home', address: 'Connaught Place, New Delhi', latitude: 28.6304, longitude: 77.2177 },
+  { id: '2', icon: '💼', title: 'Work', address: 'DLF Cyber City, Gurugram', latitude: 28.4952, longitude: 77.0878 },
+];
 
 const DestinationSearch = () => {
   const [originPlace, setOriginPlace] = useState(null);
   const [destinationPlace, setDestinationPlace] = useState(null);
+  const [activeInput, setActiveInput] = useState('origin'); // origin or destination
   
   const originRef = useRef(null);
   const destinationRef = useRef(null);
   const navigation = useNavigation();
+
+  // Queries GPS and autofills origin input
+  const handleGetCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const place = {
+          data: { description: 'Current Location' },
+          details: {
+            geometry: {
+              location: {
+                lat: latitude,
+                lng: longitude
+              }
+            }
+          }
+        };
+        setOriginPlace(place);
+        originRef.current?.setAddressText('Current Location');
+        destinationRef.current?.focus();
+        setActiveInput('destination');
+      },
+      (error) => {
+        Alert.alert("Location Error ❌", "Could not fetch your current location. Please verify location services are enabled.");
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+    );
+  };
+
+  // Handles clicking Home or Work saved places list row
+  const handleSelectSavedPlace = (place) => {
+    const formattedPlace = {
+      data: { description: place.address },
+      details: {
+        geometry: {
+          location: {
+            lat: place.latitude,
+            lng: place.longitude
+          }
+        }
+      }
+    };
+    
+    if (activeInput === 'origin') {
+      setOriginPlace(formattedPlace);
+      originRef.current?.setAddressText(place.title);
+      destinationRef.current?.focus();
+      setActiveInput('destination');
+    } else {
+      setDestinationPlace(formattedPlace);
+      destinationRef.current?.setAddressText(place.title);
+    }
+  };
     
   useEffect(() => {
     if (originPlace && destinationPlace) {
@@ -61,75 +122,116 @@ const DestinationSearch = () => {
           {/* Autocomplete Input Container */}
           <View style={localStyles.inputsContainer}>
             
-            {/* Input 1: WHERE FROM */}
-            <GooglePlacesAutocomplete
-              ref={originRef}
-              placeholder='Where from?'
-              onPress={(data, details = null) => {
-                setOriginPlace({ data, details });
-                destinationRef.current?.focus();
-              }}
-              enablePoweredByContainer={false}
-              userLocation={true}
-              currentLocation={true}
-              currentLocationLabel='Current Location'
-              minLength={2}
-              fetchDetails={true}
-              nearbyPlacesAPI="GooglePlacesSearch"  
-              enableHighAccuracyLocation={true} 
-              predefinedPlaces={[homePlace, workPlace]}  
-              GooglePlacesDetailsQuery={{ fields: "geometry,name,formatted_address" }}
-              keyboardShouldPersistTaps="handled"
-              debounce={400}
-              query={{
-                key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
-                language: 'en',
-              }}
-              renderRow={(data) => <PlaceRow data={data} />}
-              styles={{
-                container: localStyles.autocompleteContainer,
-                textInput: localStyles.textInput,
-                listView: [localStyles.listView, { top: 92 }], 
-                row: localStyles.listRow,
-                separator: localStyles.rowSeparator,
-              }}
-            />
+            {/* Input 1: WHERE FROM (Z-Index focus wrapper) */}
+            <View style={{ zIndex: activeInput === 'origin' ? 100 : 1, position: 'relative' }}>
+              <GooglePlacesAutocomplete
+                ref={originRef}
+                placeholder='Where from?'
+                onPress={(data, details = null) => {
+                  setOriginPlace({ data, details });
+                  destinationRef.current?.focus();
+                  setActiveInput('destination');
+                }}
+                enablePoweredByContainer={false}
+                userLocation={true}
+                currentLocation={true}
+                currentLocationLabel='Current Location'
+                minLength={2}
+                fetchDetails={true}
+                nearbyPlacesAPI="GooglePlacesSearch"  
+                enableHighAccuracyLocation={true} 
+                GooglePlacesDetailsQuery={{ fields: "geometry,name,formatted_address" }}
+                keyboardShouldPersistTaps="handled"
+                debounce={400}
+                textInputProps={{
+                  onFocus: () => setActiveInput('origin')
+                }}
+                query={{
+                  key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
+                  language: 'en',
+                }}
+                renderRow={(data) => <PlaceRow data={data} />}
+                styles={{
+                  container: localStyles.autocompleteContainer,
+                  textInput: localStyles.textInput,
+                  listView: [localStyles.listView, { top: 44 }], 
+                  row: localStyles.listRow,
+                  separator: localStyles.rowSeparator,
+                }}
+              />
+            </View>
             
-            {/* Input 2: WHERE TO */}
-            <GooglePlacesAutocomplete
-              ref={destinationRef}
-              placeholder='Where to?'
-              onPress={(data, details = null) => {
-                setDestinationPlace({ data, details });
-              }}
-              enablePoweredByContainer={false}
-              userLocation={true}
-              currentLocation={true}
-              currentLocationLabel='Current Location'
-              nearbyPlacesAPI="GooglePlacesSearch"  
-              enableHighAccuracyLocation={true} 
-              predefinedPlaces={[homePlace, workPlace]} 
-              keyboardShouldPersistTaps="handled"
-              debounce={400}
-              query={{
-                key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
-                language: 'en',
-              }}
-              renderRow={(data) => <PlaceRow data={data} />}
-              fetchDetails={true}
-              minLength={2}
-              styles={{
-                container: localStyles.autocompleteContainer,
-                textInput: localStyles.textInput,
-                listView: [localStyles.listView, { top: 40 }], 
-                row: localStyles.listRow,
-                separator: localStyles.rowSeparator,
-              }}
-            />
+            {/* Input 2: WHERE TO (Z-Index focus wrapper) */}
+            <View style={{ zIndex: activeInput === 'destination' ? 100 : 1, position: 'relative' }}>
+              <GooglePlacesAutocomplete
+                ref={destinationRef}
+                placeholder='Where to?'
+                onPress={(data, details = null) => {
+                  setDestinationPlace({ data, details });
+                }}
+                enablePoweredByContainer={false}
+                userLocation={true}
+                currentLocation={true}
+                currentLocationLabel='Current Location'
+                nearbyPlacesAPI="GooglePlacesSearch"  
+                enableHighAccuracyLocation={true} 
+                keyboardShouldPersistTaps="handled"
+                debounce={400}
+                textInputProps={{
+                  onFocus: () => setActiveInput('destination')
+                }}
+                query={{
+                  key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
+                  language: 'en',
+                }}
+                renderRow={(data) => <PlaceRow data={data} />}
+                fetchDetails={true}
+                minLength={2}
+                styles={{
+                  container: localStyles.autocompleteContainer,
+                  textInput: localStyles.textInput,
+                  listView: [localStyles.listView, { top: 44 }], 
+                  row: localStyles.listRow,
+                  separator: localStyles.rowSeparator,
+                }}
+              />
+            </View>
 
           </View>
         </View>
       </View>
+
+      {/* 2. Scrollable Saved Places and Geolocation shortcuts panel */}
+      <ScrollView style={{ flex: 1, padding: 16 }} keyboardShouldPersistTaps="handled">
+        {/* Use Current Location Button */}
+        <TouchableOpacity 
+          style={localStyles.currentLocationBtn}
+          onPress={handleGetCurrentLocation}
+          activeOpacity={0.7}
+        >
+          <Text style={localStyles.currentLocationIcon}>📍</Text>
+          <Text style={localStyles.currentLocationText}>Use Current Location</Text>
+        </TouchableOpacity>
+
+        {/* Saved Places Section */}
+        <Text style={localStyles.sectionTitle}>Saved Places</Text>
+        
+        {savedPlaces.map((place) => (
+          <TouchableOpacity 
+            key={place.id}
+            style={localStyles.savedPlaceRow}
+            onPress={() => handleSelectSavedPlace(place)}
+            activeOpacity={0.7}
+          >
+            <Text style={localStyles.savedPlaceIcon}>{place.icon}</Text>
+            <View style={localStyles.savedPlaceTextContainer}>
+              <Text style={localStyles.savedPlaceTitle}>{place.title}</Text>
+              <Text style={localStyles.savedPlaceAddress}>{place.address}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
     </SafeAreaView>
   );
 };
@@ -222,7 +324,64 @@ const localStyles = StyleSheet.create({
     height: 1,
     backgroundColor: '#f1f1f1',
     marginLeft: 20, 
-  }
+  },
+  currentLocationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  currentLocationIcon: {
+    fontSize: 18,
+    color: '#3B82F6',
+    marginRight: 12,
+  },
+  currentLocationText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    marginTop: 20,
+    marginBottom: 10,
+    letterSpacing: 1,
+  },
+  savedPlaceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  savedPlaceIcon: {
+    fontSize: 18,
+    color: '#64748B',
+    marginRight: 12,
+    backgroundColor: '#F1F5F9',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    textAlign: 'center',
+    lineHeight: 32,
+  },
+  savedPlaceTextContainer: {
+    flex: 1,
+  },
+  savedPlaceTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  savedPlaceAddress: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
 });
 
 export default DestinationSearch;
