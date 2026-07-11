@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Switch, SafeAreaView, Dimensions, Alert, TouchableOpacity, Modal, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Switch, SafeAreaView, Dimensions, Alert, TouchableOpacity, Modal, TextInput, ScrollView, Platform, PermissionsAndroid } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { io } from 'socket.io-client';
@@ -33,6 +33,36 @@ export default function DashboardScreen({ route }) {
   useEffect(() => {
     isOnlineRef.current = isOnline;
   }, [isOnline]);
+
+  // 📡 Contextual Location Permission Check
+  const requestLocationPermission = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: "Velo Driver Location Permission",
+            message: "Velo Driver needs access to your location to match you with nearby riders.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("✅ Location permission granted for Driver");
+        }
+      } else {
+        Geolocation.requestAuthorization();
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
 
   // 1. WebSocket connection setup
   useEffect(() => {

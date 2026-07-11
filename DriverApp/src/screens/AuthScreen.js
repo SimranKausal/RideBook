@@ -6,7 +6,7 @@ import axios from 'axios';
 const API_BASE_URL = 'http://4.240.25.27:5000/api/auth';
 
 export default function AuthScreen({ navigation }) {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+91');
   const [code, setCode] = useState('');
   const [sessionInfo, setSessionInfo] = useState(null);
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -95,7 +95,14 @@ export default function AuthScreen({ navigation }) {
             <Text style={styles.label}>Enter Mobile Number</Text>
             <TextInput
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              onChangeText={(text) => {
+                // Keep +91 country code prefix locked
+                if (!text.startsWith('+91')) {
+                  setPhoneNumber('+91');
+                } else {
+                  setPhoneNumber(text);
+                }
+              }}
               placeholder="+91 98765 43210"
               placeholderTextColor="#64748B"
               keyboardType="phone-pad"
