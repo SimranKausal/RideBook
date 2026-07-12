@@ -395,7 +395,7 @@ const SearchResults = () => {
             <TouchableOpacity style={styles.cancelTripBtn} onPress={handleCancelRide}>
               <Text style={styles.cancelTripBtnText}>Cancel Ride ❌</Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
       </View>
 
