@@ -110,7 +110,11 @@ router.post('/request-ride', async (req, res) => {
       fare: finalFare,
       status: isScheduled ? 'SCHEDULED' : 'SEARCHING',
       scheduledTime: isScheduled ? new Date(scheduledTime) : null,
-      startOtp: randomOtp
+      startOtp: randomOtp,
+      paymentMethod: req.body.paymentMethod || 'CASH',
+      paymentStatus: req.body.paymentStatus || 'PENDING',
+      razorpayOrderId: req.body.razorpayOrderId || null,
+      razorpayPaymentId: req.body.razorpayPaymentId || null
     });
 
     await newRide.save();
@@ -188,6 +192,8 @@ router.post('/estimate-fares', (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
+});
+
 // 🎟️ Promo Validation Route
 router.post('/validate-promo', (req, res) => {
   const { promoCode, fare } = req.body;
@@ -435,6 +441,8 @@ router.get('/trips/history/:id', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
+});
+
 // ⭐️ 10. POST Route: Submit passenger rating for a completed ride and update Driver aggregate rating
 router.post('/rate-driver', async (req, res) => {
   const { rideId, rating } = req.body;
