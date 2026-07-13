@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, Pressable, Alert, TextInput } from 'react-native'
+import { View, Text, Pressable, Alert, TextInput, ScrollView } from 'react-native'
 import UberTypeRow from '../UberTypeRow'
 import typesdata from "../../assets/data/types"
 import axios from 'axios'
@@ -211,8 +211,25 @@ const UberTypes = (props) => {
               Alert.alert("Verification Error", "Failed to check signatures on server.");
               setIsSearching(false);
             }
-          }).catch((error) => {
-            console.log("❌ Razorpay checkout cancelled:", error.description);
+          }).catch(async (error) => {
+            // Fallback for Mock Mode testing in case the Razorpay sheet cannot open with the mock order ID!
+            if (orderId && orderId.startsWith('order_mock_')) {
+              console.log("ℹ️ [Mock Mode] Bypassing Razorpay Checkout sheet crash for test order");
+              try {
+                const verifyResponse = await axios.post('http://4.240.25.27:5000/api/payments/verify-payment', {
+                  razorpay_order_id: orderId,
+                  razorpay_payment_id: `pay_mock_${Date.now()}`
+                });
+                if (verifyResponse.data.success) {
+                  requestRideAllocation(orderId, `pay_mock_${Date.now()}`);
+                  return;
+                }
+              } catch (err) {
+                console.log("Mock verification failed", err);
+              }
+            }
+
+            console.log("❌ Razorpay checkout cancelled:", error?.description || "Payment cancelled");
             Alert.alert("Payment Cancelled ⚠️", "Transaction was aborted by the user.");
             setIsSearching(false);
           });
@@ -229,7 +246,7 @@ const UberTypes = (props) => {
   };
 
   return (
-    <View>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 15 }}>
       {typesdata.map((item) => {
         const isCurrentSelection = item.type === selectedType;
         const dynamicPrice = getFrontendEstimate(item.type, props.pickupLocation, props.dropoffLocation, props.stopLocation);
@@ -247,6 +264,71 @@ const UberTypes = (props) => {
           </Pressable>
         );
       })}
+
+      {/* 🏷️ RECOMMENDED PROMO CODES LIST */}
+      <View style={{ marginHorizontal: 10, marginTop: 6, marginBottom: 2 }}>
+        <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          Recommended Offers
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <Pressable 
+            onPress={() => {
+              setPromoText('VELO50');
+              Alert.alert("Code Selected 🎟️", "Tap 'Apply' to apply the 50% discount to your ride!");
+            }}
+            style={{
+              backgroundColor: '#EFF6FF',
+              borderColor: '#BFDBFE',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              alignItems: 'flex-start',
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#1E40AF' }}>VELO50</Text>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: '#3B82F6', marginTop: 2 }}>50% OFF (First 5 Rides)</Text>
+          </Pressable>
+
+          <Pressable 
+            onPress={() => {
+              setPromoText('SAVE100');
+              Alert.alert("Code Selected 🎟️", "Tap 'Apply' to apply the flat ₹100 discount to your ride!");
+            }}
+            style={{
+              backgroundColor: '#ECFDF5',
+              borderColor: '#A7F3D0',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              alignItems: 'flex-start',
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#065F46' }}>SAVE100</Text>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: '#059669', marginTop: 2 }}>Flat ₹100 OFF (Min ₹150)</Text>
+          </Pressable>
+
+          <Pressable 
+            onPress={() => {
+              setPromoText('WELCOME20');
+              Alert.alert("Code Selected 🎟️", "Tap 'Apply' to apply the 20% new user discount to your ride!");
+            }}
+            style={{
+              backgroundColor: '#FDF2F8',
+              borderColor: '#FBCFE8',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              alignItems: 'flex-start',
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#9D174D' }}>WELCOME20</Text>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: '#DB2777', marginTop: 2 }}>20% OFF (New User Welcome)</Text>
+          </Pressable>
+        </ScrollView>
+      </View>
 
       {/* 🎟️ PROMO CODE CARD BLOCK */}
       <View style={{
@@ -397,7 +479,7 @@ const UberTypes = (props) => {
           <Text style={{ fontSize: 18 }}>📅</Text>
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

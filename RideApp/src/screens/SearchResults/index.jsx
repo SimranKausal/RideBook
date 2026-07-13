@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'; 
-import { View, Dimensions, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, Modal, TextInput, ScrollView, SafeAreaView } from 'react-native';
+import { View, Dimensions, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, Modal, TextInput, ScrollView, SafeAreaView, Platform, KeyboardAvoidingView } from 'react-native';
 import UberTypes from "../../components/UberTypes";
 import RouteMap from "../../components/RouteMap";
 import { useRoute, useNavigation } from "@react-navigation/native";
@@ -302,7 +302,10 @@ const SearchResults = () => {
         )}
       </View>
 
-      <View style={{ height: 400 }}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ height: 430 }}
+      >
         {rideStatus === 'IDLE' || rideStatus === 'SEARCHING' ? (
           <View style={{ flex: 1 }}>
             {rideStatus === 'SEARCHING' ? (
@@ -397,7 +400,7 @@ const SearchResults = () => {
             </TouchableOpacity>
           </TouchableOpacity>
         )}
-      </View>
+      </KeyboardAvoidingView>
 
       {/* 📅 BOOK FOR LATER: CUSTOM DATE/TIME PICKER MODAL */}
       <Modal visible={showDatePicker} animationType="slide" transparent={true}>
