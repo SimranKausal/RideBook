@@ -3,7 +3,7 @@ import { View, StyleSheet, ActivityIndicator, Platform, PermissionsAndroid } fro
 import MapView from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 
-const HomeMap = () => {
+const HomeMap = React.forwardRef((props, ref) => {
   const [userLocation, setUserLocation] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,6 @@ const HomeMap = () => {
           loadFallback();
         }
       } else {
-        // iOS handles permission checks at plist configuration level
         getCurrentLocation();
       }
     } catch (err) {
@@ -40,13 +39,17 @@ const HomeMap = () => {
     Geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation({
+        const region = {
           latitude,
           longitude,
           latitudeDelta: 0.015,
           longitudeDelta: 0.015,
-        });
+        };
+        setUserLocation(region);
         setLoading(false);
+        if (props.onRegionChangeComplete) {
+          props.onRegionChangeComplete(region);
+        }
       },
       (error) => {
         console.log("❌ [HomeMap GPS Error] Could not fetch coordinates:", error.message);
@@ -57,13 +60,17 @@ const HomeMap = () => {
   };
 
   const loadFallback = () => {
-    setUserLocation({
+    const region = {
       latitude: 28.6139,
       longitude: 77.2090,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
-    });
+    };
+    setUserLocation(region);
     setLoading(false);
+    if (props.onRegionChangeComplete) {
+      props.onRegionChangeComplete(region);
+    }
   };
 
   useEffect(() => {
@@ -81,14 +88,20 @@ const HomeMap = () => {
   return (
     <View style={styles.container}>
       <MapView
+        ref={ref}
         style={styles.map}
         initialRegion={userLocation}
-        showsUserLocation={true} // Enables native pulsing blue location marker dot
+        showsUserLocation={true}
         followsUserLocation={true}
+        onRegionChangeComplete={(region) => {
+          if (props.onRegionChangeComplete) {
+            props.onRegionChangeComplete(region);
+          }
+        }}
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -30,6 +30,20 @@ const DestinationSearch = () => {
   const [activeInput, setActiveInput] = useState('origin'); // origin, stop, or destination
   const [stopPlace, setStopPlace] = useState(null);
   const [showStopInput, setShowStopInput] = useState(false);
+  const [currentCoords, setCurrentCoords] = useState(null);
+
+  useEffect(() => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      (error) => console.log('Location fetch error for autocomplete bias:', error.message),
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+    );
+  }, []);
   
   const originRef = useRef(null);
   const stopRef = useRef(null);
@@ -163,6 +177,9 @@ const DestinationSearch = () => {
                 query={{
                   key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
                   language: 'en',
+                  components: 'country:in',
+                  location: currentCoords ? `${currentCoords.latitude},${currentCoords.longitude}` : '28.6139,77.2090',
+                  radius: '50000',
                 }}
                 renderRow={(data) => <PlaceRow data={data} />}
                 styles={{
@@ -211,6 +228,9 @@ const DestinationSearch = () => {
                     query={{
                       key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
                       language: 'en',
+                      components: 'country:in',
+                      location: currentCoords ? `${currentCoords.latitude},${currentCoords.longitude}` : '28.6139,77.2090',
+                      radius: '50000',
                     }}
                     renderRow={(data) => <PlaceRow data={data} />}
                     styles={{
@@ -257,6 +277,9 @@ const DestinationSearch = () => {
                 query={{
                   key: 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE',
                   language: 'en',
+                  components: 'country:in',
+                  location: currentCoords ? `${currentCoords.latitude},${currentCoords.longitude}` : '28.6139,77.2090',
+                  radius: '50000',
                 }}
                 renderRow={(data) => <PlaceRow data={data} />}
                 fetchDetails={true}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import HomeMap from '../../components/HomeMap/index';
 import HomeSearch from "../../components/HomeSearch";
@@ -7,6 +7,40 @@ import Geolocation from '@react-native-community/geolocation';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const mapRef = useRef(null);
+  const [currentAddress, setCurrentAddress] = useState('Locating you...');
+
+  const handleRegionChange = async (region) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${region.latitude},${region.longitude}&key=AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE`
+      );
+      const json = await response.json();
+      if (json.results && json.results.length > 0) {
+        setCurrentAddress(json.results[0].formatted_address);
+      }
+    } catch (error) {
+      console.log("❌ [Geocoding Error]:", error.message);
+    }
+  };
+
+  const recenter = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        mapRef.current?.animateToRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
+        }, 1000);
+      },
+      (error) => {
+        Alert.alert("GPS Error ❌", "Could not locate your device.");
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+    );
+  };
 
   const handleSavedPlaceShortcut = (placeType) => {
     Geolocation.getCurrentPosition(
@@ -66,14 +100,14 @@ const HomeScreen = () => {
         <View style={styles.addressCapsule}>
           <View style={styles.greenDot} />
           <Text style={styles.addressText} numberOfLines={1}>
-            Block-C, Sector 2, Noida, Uttar Pradesh
+            {currentAddress}
           </Text>
         </View>
       </View>
 
       {/* Map Section */}
       <View style={styles.mapContainer}>
-        <HomeMap />
+        <HomeMap ref={mapRef} onRegionChangeComplete={handleRegionChange} />
         
         {/* Floating Center Pin (Rapido style) */}
         <View style={styles.floatingCenterPin} pointerEvents="none">
@@ -105,7 +139,7 @@ const HomeScreen = () => {
       </View>
 
       {/* Floating Re-center Target Button */}
-      <TouchableOpacity style={styles.recenterButton} activeOpacity={0.7}>
+      <TouchableOpacity style={styles.recenterButton} onPress={recenter} activeOpacity={0.7}>
         <Text style={styles.recenterIcon}>🎯</Text>
       </TouchableOpacity>
 
