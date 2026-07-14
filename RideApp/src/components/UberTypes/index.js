@@ -170,7 +170,46 @@ const UberTypes = (props) => {
         });
 
         if (orderResponse.data.success) {
-          const { orderId, keyId } = orderResponse.data;
+          const { orderId, keyId, isMock } = orderResponse.data;
+
+          if (isMock) {
+            setIsSearching(false);
+            Alert.alert(
+              "Velo Pay Sandbox 💳",
+              `Select payment action for Demo Order (₹${finalFare}):`,
+              [
+                {
+                  text: "Simulate Success ✅",
+                  onPress: async () => {
+                    setIsSearching(true);
+                    try {
+                      const verifyResponse = await axios.post('http://4.240.25.27:5000/api/payments/verify-payment', {
+                        razorpay_order_id: orderId,
+                        razorpay_payment_id: `pay_mock_${Date.now()}`
+                      });
+                      if (verifyResponse.data.success) {
+                        requestRideAllocation(orderId, `pay_mock_${Date.now()}`);
+                      } else {
+                        Alert.alert("Simulation Failed", "Verification rejected.");
+                        setIsSearching(false);
+                      }
+                    } catch (err) {
+                      Alert.alert("Error", "Could not reach server.");
+                      setIsSearching(false);
+                    }
+                  }
+                },
+                {
+                  text: "Cancel Payment ❌",
+                  style: "cancel",
+                  onPress: () => {
+                    setIsSearching(false);
+                  }
+                }
+              ]
+            );
+            return;
+          }
 
           // Step 2: Trigger Razorpay checkout sheet
           const options = {
