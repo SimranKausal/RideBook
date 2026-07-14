@@ -355,4 +355,28 @@ router.put('/driver/update-location', async (req, res) => {
   }
 });
 
+// GET Route to fetch driver profile details dynamically
+router.get('/driver/profile/:driverId', async (req, res) => {
+  const { driverId } = req.params;
+  try {
+    const driver = await Driver.findById(driverId);
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found.' });
+    }
+    return res.status(200).json({
+      success: true,
+      driver: {
+        fullname: driver.fullname,
+        email: driver.email,
+        phone: driver.phone,
+        vehicleDetails: driver.vehicleDetails,
+        rating: driver.rating || 4.88
+      }
+    });
+  } catch (error) {
+    console.error(`❌ [Driver Profile Fetch] Failed:`, error.message);
+    return res.status(500).json({ success: false, message: 'Server error fetching driver profile.' });
+  }
+});
+
 module.exports = router;
