@@ -31,11 +31,7 @@ export default function HistoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuBtn} onPress={() => navigation.openDrawer()}>
-          <Text style={styles.menuBtnText}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Your Trips</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.title}>Activity</Text>
       </View>
 
       {loading ? (

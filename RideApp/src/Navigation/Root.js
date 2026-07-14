@@ -1,62 +1,89 @@
 import React from 'react';
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
 
 // Import all your screen configurations
 import SplashScreen from '../screens/SplashScreen';
 import AuthScreen from '../screens/AuthScreen';
 import HomeNavigator from "./Home.js";
-import CompleteProfileScreen from '../screens/CompleteProfileScreen'; //
-import CustomDrawer from "./CustomDrawer.js";
+import CompleteProfileScreen from '../screens/CompleteProfileScreen';
+import ServicesScreen from '../screens/ServicesScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import AccountScreen from '../screens/AccountScreen';
 
 // Initialize both Navigators
 const RootStack = createNativeStackNavigator();
-const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
-// 1. Your reusable Dummy Screen component
-const DummyScreen = (props) => {
+// The Main Application Bottom Tab Navigator (Only accessible after logging in)
+const AppTabNavigator = () => {
   return (
-    <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-      <Text>{props.name}</Text>
-    </View>
-  );
-};
-
-// 2. The Main Application Drawer (Only accessible after logging in)
-const AppDrawerNavigator = () => {
-  return (
-    <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawer {...props} />}
+    <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        drawerType: 'front',
-        swipeEdgeWidth: 100,
+        tabBarActiveTintColor: '#0F172A',
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E2E8F0',
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '700',
+        }
       }}
     >
-      {/* Your working Map Stack sits right here as the primary screen */}
-      <Drawer.Screen name="Home" component={HomeNavigator} />
-
-      <Drawer.Screen name="Your Trips" component={HistoryScreen} />
-
-      <Drawer.Screen name="Help">
-        {() => <DummyScreen name="Help" />}
-      </Drawer.Screen>
-
-      <Drawer.Screen name="Wallet">
-        {() => <DummyScreen name="Wallet" />}
-      </Drawer.Screen>
-
-      <Drawer.Screen name="Settings">
-        {() => <DummyScreen name="Settings" />}
-      </Drawer.Screen>
-    </Drawer.Navigator>
+      <Tab.Screen 
+        name="HomeTab" 
+        component={HomeNavigator} 
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 18, color }}>🏠</Text>
+          )
+        }}
+      />
+      <Tab.Screen 
+        name="ServicesTab" 
+        component={ServicesScreen} 
+        options={{
+          tabBarLabel: 'Services',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 18, color }}>🎛️</Text>
+          )
+        }}
+      />
+      <Tab.Screen 
+        name="ActivityTab" 
+        component={HistoryScreen} 
+        options={{
+          tabBarLabel: 'Activity',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 18, color }}>📋</Text>
+          )
+        }}
+      />
+      <Tab.Screen 
+        name="AccountTab" 
+        component={AccountScreen} 
+        options={{
+          tabBarLabel: 'Account',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 18, color }}>👤</Text>
+          )
+        }}
+      />
+    </Tab.Navigator>
   );
 };
 
-// 3. The Absolute Root Component
+// The Absolute Root Component
 const RootNavigator = () => {
   return (
     <NavigationContainer>
@@ -67,11 +94,11 @@ const RootNavigator = () => {
         {/* Gateway Layer 2: Phone Authentication */}
         <RootStack.Screen name="Auth" component={AuthScreen} />
 
-        {/* ✅ 2. PROFILE GATEWAY: Added right after Auth, but before entering the main app drawer */}
+        {/* PROFILE GATEWAY */}
         <RootStack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
         
-        {/* Core Application Layer: Side Menu & Maps */}
-        <RootStack.Screen name="MainApp" component={AppDrawerNavigator} />
+        {/* Core Application Layer: Bottom Tabs */}
+        <RootStack.Screen name="MainApp" component={AppTabNavigator} />
       </RootStack.Navigator>
     </NavigationContainer>
   );
