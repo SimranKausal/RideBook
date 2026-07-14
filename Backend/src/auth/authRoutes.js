@@ -143,6 +143,28 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
+// GET Route to fetch user profile details dynamically
+router.get('/profile/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    return res.status(200).json({
+      success: true,
+      user: {
+        fullname: user.fullname,
+        email: user.email,
+        phone: user.phone
+      }
+    });
+  } catch (error) {
+    console.error(`❌ [Profile Fetch] Failed:`, error.message);
+    return res.status(500).json({ success: false, message: 'Server error fetching profile.' });
+  }
+});
+
 // ==========================================
 // 🚖 DRIVER ENDPOINTS
 // ==========================================

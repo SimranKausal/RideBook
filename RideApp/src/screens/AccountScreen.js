@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView, Modal, Alert, TextInput } from 'react-native';
+import axios from 'axios';
 
 export default function AccountScreen() {
   // Virtual States
@@ -10,6 +11,23 @@ export default function AccountScreen() {
   const [showInboxModal, setShowInboxModal] = useState(false);
   
   const [topUpAmt, setTopUpAmt] = useState('');
+  
+  const [userName, setUserName] = useState('Simran Kaushal');
+  const passengerId = "6a28fac827c86bf2fdbcd628"; // Dynamic test ID matching baseline passenger
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`http://4.240.25.27:5000/api/auth/profile/${passengerId}`);
+        if (response.data.success && response.data.user) {
+          setUserName(response.data.user.fullname || 'Simran Kaushal');
+        }
+      } catch (err) {
+        console.log("Error fetching profile on mount:", err.message);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleTopUp = () => {
     const amt = parseFloat(topUpAmt);
@@ -26,16 +44,16 @@ export default function AccountScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Profile Card Header */}
+        {/* Profile Card Header (Uber Style: Name on left, Avatar on right) */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>SK</Text>
-          </View>
           <View style={styles.profileDetails}>
-            <Text style={styles.profileName}>Simran Kaushal</Text>
+            <Text style={styles.profileName}>{userName}</Text>
             <View style={styles.ratingBadge}>
-              <Text style={styles.ratingText}>★ 4.9 Rating</Text>
+              <Text style={styles.ratingText}>★ 4.72</Text>
             </View>
+          </View>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>👤</Text>
           </View>
         </View>
 
@@ -217,39 +235,39 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   avatarCircle: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#E2E8F0',
     width: 70,
     height: 70,
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginLeft: 16,
   },
   avatarText: {
-    color: '#FFFFFF',
-    fontSize: 24,
+    color: '#64748B',
+    fontSize: 38,
     fontWeight: '900',
   },
   profileDetails: {
     flex: 1,
   },
   profileName: {
-    fontSize: 22,
+    fontSize: 34,
     fontWeight: '900',
     color: '#0F172A',
   },
   ratingBadge: {
     backgroundColor: '#F1F5F9',
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     alignSelf: 'flex-start',
-    marginTop: 4,
+    marginTop: 6,
   },
   ratingText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#64748B',
+    color: '#334155',
   },
   balanceSummary: {
     backgroundColor: '#F8FAFC',
