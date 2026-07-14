@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Connects to local Node server (re-routed in android simulator)
 const API_BASE_URL = 'http://4.240.25.27:5000/api/auth';
@@ -63,6 +64,9 @@ export default function AuthScreen({ navigation }) {
 
       if (response.data.success) {
         const { driverId, isProfileComplete } = response.data;
+        
+        // Save session locally
+        await AsyncStorage.setItem('driverId', driverId);
         
         if (isProfileComplete) {
           // Returning Driver: Profile completed, go straight to Map Console

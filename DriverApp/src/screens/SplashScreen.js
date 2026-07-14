@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Animated, Dimensions, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -52,11 +53,24 @@ export default function SplashScreen({ navigation }) {
       ]),
     ]).start();
 
-    // Redirect to Auth after 3.5 seconds
+    // Check auth token and redirect after 3.5 seconds
     const checkAuthStatus = async () => {
-      setTimeout(() => {
-        navigation.replace('Auth');
-      }, 3500);
+      try {
+        const savedDriverId = await AsyncStorage.getItem('driverId');
+        setTimeout(() => {
+          if (savedDriverId) {
+            console.log("👋 [Session Engine] Active session found. Auto-logging in Driver:", savedDriverId);
+            navigation.replace('Dashboard', { driverId: savedDriverId });
+          } else {
+            navigation.replace('Auth');
+          }
+        }, 3500);
+      } catch (err) {
+        console.log("Error checking Driver session:", err.message);
+        setTimeout(() => {
+          navigation.replace('Auth');
+        }, 3500);
+      }
     };
 
     checkAuthStatus();

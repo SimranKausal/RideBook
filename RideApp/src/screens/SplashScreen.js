@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Animated, Dimensions, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -54,11 +55,24 @@ export default function SplashScreen({ navigation }) {
       ]),
     ]).start();
 
-    // Simulate auth token check and redirect after 3.5 seconds
+    // Check auth token and redirect after 3.5 seconds
     const checkAuthStatus = async () => {
-      setTimeout(() => {
-        navigation.replace('Auth');
-      }, 3500);
+      try {
+        const savedUserId = await AsyncStorage.getItem('userId');
+        setTimeout(() => {
+          if (savedUserId) {
+            console.log("👋 [Session Engine] Active session found. Auto-logging in Rider:", savedUserId);
+            navigation.replace('MainApp');
+          } else {
+            navigation.replace('Auth');
+          }
+        }, 3500);
+      } catch (err) {
+        console.log("Error checking Rider session:", err.message);
+        setTimeout(() => {
+          navigation.replace('Auth');
+        }, 3500);
+      }
     };
 
     checkAuthStatus();

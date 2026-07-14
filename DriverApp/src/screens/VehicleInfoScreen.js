@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import axios from 'axios';
 import { launchImageLibrary } from 'react-native-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://4.240.25.27:5000/api/auth';
 
@@ -55,6 +56,10 @@ export default function VehicleInfoScreen({ route, navigation }) {
 
       if (response.data.success) {
         Alert.alert('Profile Configured!', 'Your driver profile is active.');
+        
+        // Save session locally
+        await AsyncStorage.setItem('driverId', driverId);
+        
         navigation.replace('Dashboard', { driverId });
       }
     } catch (error) {

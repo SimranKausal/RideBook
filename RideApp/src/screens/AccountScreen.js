@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView, Modal, Alert, TextInput, Dimensions } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 export default function AccountScreen() {
+  const navigation = useNavigation();
   // Virtual States
   const [walletBalance, setWalletBalance] = useState(500);
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -30,6 +33,31 @@ export default function AccountScreen() {
     };
     fetchProfile();
   }, []);
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Log Out 🚪",
+      "Are you sure you want to log out of Velo?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('userId');
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Auth' }],
+              });
+            } catch (err) {
+              console.log("Logout error:", err.message);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleTopUp = () => {
     const amt = parseFloat(topUpAmt);
@@ -108,7 +136,7 @@ export default function AccountScreen() {
             <Text style={styles.settingText}>🔒 Privacy & Legal</Text>
             <Text style={styles.arrowIcon}>›</Text>
           </Pressable>
-          <Pressable style={styles.logoutRow} onPress={() => Alert.alert("Log Out", "Use developer settings to log out.")}>
+          <Pressable style={styles.logoutRow} onPress={handleLogout}>
             <Text style={styles.logoutText}>🚪 Log Out</Text>
           </Pressable>
         </View>

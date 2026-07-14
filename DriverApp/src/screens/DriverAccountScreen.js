@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView, Modal, Alert, TextInput, Dimensions } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 export default function DriverAccountScreen() {
+  const navigation = useNavigation();
   // States
   const [walletBalance, setWalletBalance] = useState(1500); // Driver starts with earnings!
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -38,6 +41,31 @@ export default function DriverAccountScreen() {
     };
     fetchProfile();
   }, []);
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Log Out 🚪",
+      "Are you sure you want to log out of Velo Driver?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('driverId');
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Auth' }],
+              });
+            } catch (err) {
+              console.log("Logout error:", err.message);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleCashout = () => {
     const amt = parseFloat(cashoutAmt);
@@ -120,6 +148,10 @@ export default function DriverAccountScreen() {
           <Pressable style={styles.settingRow} onPress={() => Alert.alert("Documents", "Aadhaar, License & RC verified.")}>
             <Text style={styles.settingText}>📄 Legal Documents</Text>
             <Text style={styles.arrowIcon}>›</Text>
+          </Pressable>
+          <Pressable style={styles.settingRow} onPress={handleLogout}>
+            <Text style={[styles.settingText, { color: '#EF4444' }]}>🚪 Log Out</Text>
+            <Text style={[styles.arrowIcon, { color: '#EF4444' }]}>›</Text>
           </Pressable>
         </View>
 

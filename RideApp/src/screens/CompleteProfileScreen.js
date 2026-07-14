@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://10.0.2.2:5000/api/auth'; 
 
@@ -39,6 +40,10 @@ export default function CompleteProfileScreen({ route, navigation }) {
 
       if (response.data.success) {
         Alert.alert('Welcome!', 'Your profile has been set up successfully.');
+        
+        // Save session locally
+        await AsyncStorage.setItem('userId', userId);
+        
         // ✅ Close out the onboarding system and mount your Map + Drawer workspace
         navigation.replace('MainApp');
       }
