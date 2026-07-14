@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView, Modal, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView, Modal, Alert, TextInput, Dimensions } from 'react-native';
 import axios from 'axios';
+
+const { width } = Dimensions.get('window');
 
 export default function DriverAccountScreen() {
   // States
