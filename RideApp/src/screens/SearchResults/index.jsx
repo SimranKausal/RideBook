@@ -273,8 +273,8 @@ const SearchResults = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'space-between' }}>
-      <View style={{ height: Dimensions.get('window').height - 400 }}>
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
+      <View style={{ flex: 1 }}>
         <RouteMap 
           origin={originPlace} 
           destination={destinationPlace} 
@@ -304,7 +304,7 @@ const SearchResults = () => {
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ height: 430 }}
+        style={{ height: 400 }}
       >
         {rideStatus === 'IDLE' || rideStatus === 'SEARCHING' ? (
           <View style={{ flex: 1 }}>

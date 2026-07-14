@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
@@ -25,14 +25,6 @@ const AppTabNavigator = () => {
         headerShown: false,
         tabBarActiveTintColor: '#0F172A',
         tabBarInactiveTintColor: '#94A3B8',
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '700',
@@ -42,11 +34,24 @@ const AppTabNavigator = () => {
       <Tab.Screen 
         name="HomeTab" 
         component={HomeNavigator} 
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 18, color }}>🏠</Text>
-          )
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomeScreen';
+          const shouldHide = routeName === 'DestinationSearch' || routeName === 'SearchResults';
+          return {
+            tabBarLabel: 'Home',
+            tabBarStyle: {
+              display: shouldHide ? 'none' : 'flex',
+              backgroundColor: '#FFFFFF',
+              borderTopWidth: 1,
+              borderTopColor: '#E2E8F0',
+              height: shouldHide ? 0 : 62,
+              paddingBottom: shouldHide ? 0 : 8,
+              paddingTop: shouldHide ? 0 : 8,
+            },
+            tabBarIcon: ({ color }) => (
+              <Text style={{ fontSize: 18, color }}>🏠</Text>
+            )
+          };
         }}
       />
       <Tab.Screen 
