@@ -100,8 +100,8 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            // Updated to use the secure production release signing configurations
-            signingConfig signingConfigs.release
+            // Signed with the developer debug certificate so ColorOS/Android security accepts it for offline testing
+            signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
