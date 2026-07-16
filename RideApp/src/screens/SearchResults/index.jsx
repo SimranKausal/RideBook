@@ -286,20 +286,6 @@ const SearchResults = () => {
           setIsDriving={setIsDriving}
           driverLocation={driverPos}
         />
-
-        {/* 🚨 LIVE MANAGER DEMO PANEL (Floating Overlay) */}
-        {rideStatus === 'SEARCHING' && (
-          <View style={styles.demoPanel}>
-            <ActivityIndicator size="small" color="#000" style={{ marginRight: 8 }} />
-            <Text style={styles.demoText}>Searching for Drivers...</Text>
-            <TouchableOpacity 
-              style={styles.demoButton} 
-              onPress={simulateDriverAcceptance}
-            >
-              <Text style={styles.demoButtonText}>Simulate Driver Accept 𚖖</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       <KeyboardAvoidingView 
