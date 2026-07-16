@@ -34,19 +34,24 @@ const AppTabNavigator = () => {
       <Tab.Screen 
         name="HomeTab" 
         component={HomeNavigator} 
-        options={{
-          tabBarLabel: 'Home',
-          tabBarStyle: {
-            backgroundColor: '#FFFFFF',
-            borderTopWidth: 1,
-            borderTopColor: '#E2E8F0',
-            height: 62,
-            paddingBottom: 8,
-            paddingTop: 8,
-          },
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 18, color }}>🏠</Text>
-          )
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomeScreen';
+          const shouldHide = routeName === 'DestinationSearch' || routeName === 'SearchResults';
+          return {
+            tabBarLabel: 'Home',
+            tabBarStyle: {
+              display: shouldHide ? 'none' : 'flex',
+              backgroundColor: '#FFFFFF',
+              borderTopWidth: 1,
+              borderTopColor: '#E2E8F0',
+              height: shouldHide ? 0 : 62,
+              paddingBottom: shouldHide ? 0 : 8,
+              paddingTop: shouldHide ? 0 : 8,
+            },
+            tabBarIcon: ({ color }) => (
+              <Text style={{ fontSize: 18, color }}>🏠</Text>
+            )
+          };
         }}
       />
       <Tab.Screen 
