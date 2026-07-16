@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function DriverHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [trips, setTrips] = useState([]);
-  
-  // Driver dummy ID matching the baseline driver
-  const driverId = "6a34d1819c65dd2c4eb29403";
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get(`http://4.240.25.27:5000/api/rides/trips/history/${driverId}`);
+        // 1. Get the dynamic logged-in driver ID from AsyncStorage
+        let activeDriverId = await AsyncStorage.getItem('driverId');
+        
+        // 2. Fall back to the dummy ID if not found (e.g. for testing)
+        if (!activeDriverId) {
+          activeDriverId = "6a34d1819c65dd2c4eb29403";
+        }
+
+        const response = await axios.get(`http://4.240.25.27:5000/api/rides/trips/history/${activeDriverId}`);
         if (response.data.success) {
           setTrips(response.data.trips);
         }
