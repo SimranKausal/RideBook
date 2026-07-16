@@ -45,7 +45,7 @@ const RideSchema = new mongoose.Schema({
   }],
   paymentMethod: {
     type: String,
-    enum: ['CASH', 'ONLINE'],
+    enum: ['CASH', 'ONLINE', 'UPI'],
     default: 'CASH'
   },
   paymentStatus: {

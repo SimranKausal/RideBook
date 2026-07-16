@@ -463,10 +463,10 @@ const UberTypes = (props) => {
           </Pressable>
 
           <Pressable 
-            onPress={() => setPaymentMethod('ONLINE')}
+            onPress={() => setPaymentMethod('UPI')}
             style={{
-              backgroundColor: paymentMethod === 'ONLINE' ? '#0F172A' : '#FFFFFF',
-              borderColor: paymentMethod === 'ONLINE' ? '#0F172A' : '#CBD5E1',
+              backgroundColor: paymentMethod === 'UPI' ? '#0F172A' : '#FFFFFF',
+              borderColor: paymentMethod === 'UPI' ? '#0F172A' : '#CBD5E1',
               borderWidth: 1,
               borderRadius: 6,
               paddingVertical: 6,
@@ -474,11 +474,11 @@ const UberTypes = (props) => {
             }}
           >
             <Text style={{ 
-              color: paymentMethod === 'ONLINE' ? '#FFFFFF' : '#0F172A', 
+              color: paymentMethod === 'UPI' ? '#FFFFFF' : '#0F172A', 
               fontSize: 12, 
               fontWeight: '800' 
             }}>
-              💳 Pay Online
+              📱 UPI Scan & Pay
             </Text>
           </Pressable>
         </View>

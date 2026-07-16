@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Switch, SafeAreaView, Dimensions, Alert, TouchableOpacity, Modal, TextInput, ScrollView, Platform, PermissionsAndroid } from 'react-native';
+import { View, Text, StyleSheet, Switch, SafeAreaView, Dimensions, Alert, TouchableOpacity, Modal, TextInput, ScrollView, Platform, PermissionsAndroid, Image } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { io } from 'socket.io-client';
@@ -24,6 +24,7 @@ export default function DashboardScreen({ route }) {
   const [startOtpInput, setStartOtpInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [historyTrips, setHistoryTrips] = useState([]);
+  const [showUpiModal, setShowUpiModal] = useState(false);
 
   const locationInterval = useRef(null);
   const countdownInterval = useRef(null);
@@ -502,8 +503,19 @@ export default function DashboardScreen({ route }) {
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.completeBtn} onPress={handleCompleteRide}>
-              <Text style={styles.completeBtnText}>Complete Trip & Collect Cash</Text>
+            <TouchableOpacity 
+              style={styles.completeBtn} 
+              onPress={() => {
+                if (activeRide.paymentMethod === 'UPI') {
+                  setShowUpiModal(true);
+                } else {
+                  handleCompleteRide();
+                }
+              }}
+            >
+              <Text style={styles.completeBtnText}>
+                {activeRide.paymentMethod === 'UPI' ? "Complete Trip & Show QR Code 📱" : "Complete Trip & Collect Cash 💵"}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -526,6 +538,47 @@ export default function DashboardScreen({ route }) {
             <Text style={styles.cancelBtnText}>Cancel Ride ❌</Text>
           </TouchableOpacity>
         </View>
+      )}
+
+      {/* 📱 UPI SCAN & PAY MODAL */}
+      {activeRide && (
+        <Modal visible={showUpiModal} animationType="fade" transparent={true}>
+          <View style={styles.upiModalOverlay}>
+            <View style={styles.upiModalCard}>
+              <Text style={styles.upiModalTitle}>Passenger UPI Payment 📱</Text>
+              <Text style={styles.upiModalSubtitle}>
+                Ask the passenger to scan this QR code with Google Pay, PhonePe, Paytm, or BHIM to pay:
+              </Text>
+
+              <View style={styles.qrWrapper}>
+                <Image 
+                  source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=velo.services@paytm%26pn=Velo%26am=${activeRide.fare}%26cu=INR` }}
+                  style={styles.qrCodeImage}
+                />
+              </View>
+
+              <Text style={styles.upiModalAmountLabel}>Fare to Collect:</Text>
+              <Text style={styles.upiModalAmount}>₹{activeRide.fare}</Text>
+
+              <TouchableOpacity 
+                style={styles.upiConfirmBtn} 
+                onPress={() => {
+                  setShowUpiModal(false);
+                  handleCompleteRide();
+                }}
+              >
+                <Text style={styles.upiConfirmBtnText}>Confirm Payment Received ✅</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.upiCancelBtn} 
+                onPress={() => setShowUpiModal(false)}
+              >
+                <Text style={styles.upiCancelBtnText}>Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       )}
 
       {/* 📊 TRIP HISTORY MODAL */}
@@ -793,6 +846,84 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '850',
+  },
+
+  // 📱 UPI Scan & Pay Modal Styles
+  upiModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  upiModalCard: {
+    width: width * 0.85,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#38BDF8',
+    elevation: 10,
+  },
+  upiModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  upiModalSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 16,
+  },
+  qrWrapper: {
+    padding: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 14,
+  },
+  qrCodeImage: {
+    width: 200,
+    height: 200,
+  },
+  upiModalAmountLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  upiModalAmount: {
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#10B981',
+    marginBottom: 20,
+  },
+  upiConfirmBtn: {
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 8,
+  },
+  upiConfirmBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  upiCancelBtn: {
+    paddingVertical: 8,
+    width: '100%',
+    alignItems: 'center',
+  },
+  upiCancelBtnText: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '600',
   },
 
   // 🔔 Incoming Request Modal Styles
