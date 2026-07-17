@@ -26,6 +26,7 @@ const SearchResults = () => {
   const [chatInput, setChatInput] = useState('');
   const [etaInfo, setEtaInfo] = useState(null); // stores { distance, eta }
   const [driverPos, setDriverPos] = useState(null); // stores live driver coordinate
+  const [ridePaymentMethod, setRidePaymentMethod] = useState('CASH');
 
   // 📅 Book for Later states
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -148,6 +149,7 @@ const SearchResults = () => {
     setCurrentRideId(ride._id);
     setRideStatus('SEARCHING');
     setStartOtp(ride.startOtp);
+    setRidePaymentMethod(ride.paymentMethod || 'CASH');
   };
 
   const handleCancelRide = async () => {
@@ -361,11 +363,25 @@ const SearchResults = () => {
               </View>
             )}
 
-            {/* Trip status text */}
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusBadgeText}>
-                STATUS: {rideStatus === 'ACCEPTED' ? 'Driver is on the way!' : 'Trip started - Enjoy your ride!'}
-              </Text>
+            {/* Trip status & Payment Badge */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <View style={[styles.statusBadge, { marginBottom: 0 }]}>
+                <Text style={styles.statusBadgeText}>
+                  STATUS: {rideStatus === 'ACCEPTED' ? 'Driver is on the way!' : 'Trip started - Enjoy your ride!'}
+                </Text>
+              </View>
+
+              <View style={[
+                styles.paymentBadge, 
+                { backgroundColor: ridePaymentMethod === 'UPI' ? '#E0F2FE' : '#F1F5F9' }
+              ]}>
+                <Text style={[
+                  styles.paymentBadgeText, 
+                  { color: ridePaymentMethod === 'UPI' ? '#0369A1' : '#475569' }
+                ]}>
+                  {ridePaymentMethod === 'UPI' ? '📱 UPI Scan & Pay' : '💵 Cash'}
+                </Text>
+              </View>
             </View>
 
             {/* Quick Presets Row */}
@@ -838,6 +854,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#166534',
+  },
+  paymentBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  paymentBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
   },
   presetsRow: {
     flexDirection: 'row',
