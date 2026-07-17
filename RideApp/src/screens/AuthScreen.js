@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import axios from 'axios'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { registerFCMToken } from '../utils/fcm';
 
 // Using the 10.0.2.2 mapping so the Android Emulator routes to your computer's local port 5000
 const API_BASE_URL = 'http://4.240.25.27:5000/api/auth'; 
@@ -81,6 +82,9 @@ export default function AuthScreen({ navigation }) {
         
         // Persist session locally
         await AsyncStorage.setItem('userId', userId);
+        
+        // Sync FCM Token for push notifications
+        registerFCMToken(userId);
         
         if (navigation && typeof navigation.replace === 'function') {
           if (isProfileComplete) {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { registerFCMToken } from '../utils/fcm';
 
 const API_BASE_URL = 'http://10.0.2.2:5000/api/auth'; 
 
@@ -43,6 +44,9 @@ export default function CompleteProfileScreen({ route, navigation }) {
         
         // Save session locally
         await AsyncStorage.setItem('userId', userId);
+        
+        // Sync FCM Token for push notifications
+        registerFCMToken(userId);
         
         // ✅ Close out the onboarding system and mount your Map + Drawer workspace
         navigation.replace('MainApp');

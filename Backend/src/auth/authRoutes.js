@@ -143,6 +143,39 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
+// POST Route to update user's FCM Token for push notifications
+router.post('/update-fcm-token', async (req, res) => {
+  const { userId, fcmToken } = req.body;
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'Missing userId' });
+  }
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    console.log(`💾 [FCM Registry] Saved push token for ${updatedUser.fullname || userId}`);
+    return res.status(200).json({
+      success: true,
+      message: 'FCM Token updated successfully!'
+    });
+  } catch (error) {
+    console.error(`❌ [FCM Registry Failed] Error:`, error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error updating FCM token.',
+      error: error.message
+    });
+  }
+});
+
 // GET Route to fetch user profile details dynamically
 router.get('/profile/:userId', async (req, res) => {
   const { userId } = req.params;

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Ride = require('../models/ride'); // Matches your lowercase 'ride.js' file
 const Driver = require('../models/Driver'); 
+const { sendPushNotification } = require('../services/notificationService'); 
 
 // 📐 1. Haversine Formula: Calculates straight-line distance in Kilometers
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -296,6 +297,13 @@ router.post('/accept-ride', async (req, res) => {
       });
     }
 
+    // 📱 Dispatch push notification to passenger
+    sendPushNotification(
+      ride.passengerId, 
+      "Ride Confirmed! 🚖", 
+      `Your Velo ride has been accepted by ${driver.fullname}.`
+    );
+
     return res.status(200).json({ 
       success: true, 
       message: "Simulation: Ride accepted successfully!", 
@@ -334,6 +342,13 @@ router.post('/complete-ride', async (req, res) => {
         fare: ride.fare
       });
     }
+
+    // 📱 Dispatch push notification to passenger
+    sendPushNotification(
+      ride.passengerId, 
+      "Trip Completed! 🎉", 
+      "Thank you for riding with Velo. Tap to rate your trip."
+    );
 
     return res.status(200).json({
       success: true,

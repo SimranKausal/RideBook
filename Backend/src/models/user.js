@@ -26,8 +26,11 @@ default:''
 workAddress:{
     type:String,
     default:''
-
-}
+  },
+  fcmToken: {
+    type: String,
+    default: ''
+  }
 }, {
     timestamps:true
 })
