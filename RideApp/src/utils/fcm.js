@@ -1,5 +1,6 @@
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 import axios from 'axios';
 
 export const registerFCMToken = async (customUserId = null) => {
@@ -29,4 +30,17 @@ export const registerFCMToken = async (customUserId = null) => {
   } catch (error) {
     console.log('❌ [FCM Registration Error]:', error.message);
   }
+};
+
+// 🔔 Listens for notifications while the Rider App is open on screen
+export const setupForegroundNotificationListener = () => {
+  return messaging().onMessage(async (remoteMessage) => {
+    console.log('🔔 [FCM Foreground Notification Received]:', remoteMessage);
+    if (remoteMessage.notification) {
+      Alert.alert(
+        remoteMessage.notification.title || 'Velo Update 🔔',
+        remoteMessage.notification.body || ''
+      );
+    }
+  });
 };
