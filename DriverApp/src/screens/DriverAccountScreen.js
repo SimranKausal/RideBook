@@ -34,7 +34,8 @@ export default function DriverAccountScreen() {
           setSavedUpiId(localUpi);
         }
 
-        const response = await axios.get(`http://4.240.25.27:5000/api/auth/driver/profile/${driverId}`);
+        const localDriverId = await AsyncStorage.getItem('driverId') || driverId;
+        const response = await axios.get(`http://4.240.25.27:5000/api/auth/driver/profile/${localDriverId}`);
         if (response.data.success && response.data.driver) {
           const d = response.data.driver;
           setDriverName(d.fullname || 'Amit Kumar');
