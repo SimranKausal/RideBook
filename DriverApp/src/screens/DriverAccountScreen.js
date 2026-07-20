@@ -588,5 +588,40 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 18,
     marginTop: 4,
+  },
+  modalInput: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#CBD5E1',
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 12,
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 16,
+    width: '100%',
+  },
+  modalBtnPrimary: {
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  modalBtnPrimaryText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  modalBtnSecondary: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    width: '100%',
+  },
+  modalBtnSecondaryText: {
+    color: '#64748B',
+    fontWeight: '700',
+    fontSize: 14,
   }
 });

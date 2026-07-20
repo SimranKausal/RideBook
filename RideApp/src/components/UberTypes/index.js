@@ -144,7 +144,8 @@ const UberTypes = (props) => {
       }
     } catch (error) {
       console.error("❌ Ride Request Error:", error.message);
-      Alert.alert("Booking Engine Error", "Could not complete your ride request.");
+      const detail = error.response?.data?.error || error.response?.data?.message || error.message;
+      Alert.alert("Booking Engine Error", detail);
     } finally {
       setIsSearching(false);
     }
