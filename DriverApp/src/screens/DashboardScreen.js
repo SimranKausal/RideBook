@@ -27,18 +27,17 @@ export default function DashboardScreen({ route }) {
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [driverUpiId, setDriverUpiId] = useState('driverpay@paytm');
 
+  // Load driver's saved UPI ID on startup and when modal opens
   useEffect(() => {
     const loadDriverUpi = async () => {
       try {
         const localUpi = await AsyncStorage.getItem('driverUpiId');
-        if (localUpi) {
-          setDriverUpiId(localUpi);
+        if (localUpi && localUpi.trim()) {
+          setDriverUpiId(localUpi.trim());
         }
       } catch (e) {}
     };
-    if (showUpiModal) {
-      loadDriverUpi();
-    }
+    loadDriverUpi();
   }, [showUpiModal]);
 
   const locationInterval = useRef(null);
