@@ -233,7 +233,11 @@ export default function DashboardScreen({ route }) {
       if (response.data.success) {
         Alert.alert('Ride Confirmed!', 'Proceed to pickup location.');
         // Set the active ride status specifically to 'ACCEPTED'
-        const acceptedRide = { ...incomingRide, status: 'ACCEPTED' };
+        const acceptedRide = { 
+          ...incomingRide, 
+          status: 'ACCEPTED',
+          paymentMethod: response.data.ride?.paymentMethod || incomingRide?.paymentMethod || 'CASH'
+        };
         setActiveRide(acceptedRide);
         setIncomingRide(null);
       }

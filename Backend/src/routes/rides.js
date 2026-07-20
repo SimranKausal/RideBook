@@ -133,7 +133,8 @@ router.post('/request-ride', async (req, res) => {
         pickup: newRide.pickupLocation,
         dropoff: newRide.dropoffLocation,
         fare: newRide.fare,
-        vehicleType: selectedVehicle
+        vehicleType: selectedVehicle,
+        paymentMethod: newRide.paymentMethod
       });
     }
 
