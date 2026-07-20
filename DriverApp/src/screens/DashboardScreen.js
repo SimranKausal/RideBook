@@ -25,6 +25,21 @@ export default function DashboardScreen({ route }) {
   const [showHistory, setShowHistory] = useState(false);
   const [historyTrips, setHistoryTrips] = useState([]);
   const [showUpiModal, setShowUpiModal] = useState(false);
+  const [driverUpiId, setDriverUpiId] = useState('driverpay@paytm');
+
+  useEffect(() => {
+    const loadDriverUpi = async () => {
+      try {
+        const localUpi = await AsyncStorage.getItem('driverUpiId');
+        if (localUpi) {
+          setDriverUpiId(localUpi);
+        }
+      } catch (e) {}
+    };
+    if (showUpiModal) {
+      loadDriverUpi();
+    }
+  }, [showUpiModal]);
 
   const locationInterval = useRef(null);
   const countdownInterval = useRef(null);
@@ -556,10 +571,14 @@ export default function DashboardScreen({ route }) {
 
               <View style={styles.qrWrapper}>
                 <Image 
-                  source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=velo.services@paytm%26pn=Velo%26am=${activeRide.fare}%26cu=INR` }}
+                  source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${encodeURIComponent(driverUpiId)}%26pn=Velo%26am=${activeRide.fare}%26cu=INR` }}
                   style={styles.qrCodeImage}
                 />
               </View>
+
+              <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '700', marginBottom: 12 }}>
+                Paying To Account: <Text style={{ color: '#0F172A', fontWeight: '800' }}>{driverUpiId}</Text>
+              </Text>
 
               <Text style={styles.upiModalAmountLabel}>Fare to Collect:</Text>
               <Text style={styles.upiModalAmount}>₹{activeRide.fare}</Text>

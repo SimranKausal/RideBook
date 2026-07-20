@@ -15,6 +15,7 @@ const DriverSchema = new mongoose.Schema({
   },
   isAvailable: { type: Boolean, default: true },     // Toggle for matching engine
   profilePhoto: { type: String, default: "avatar_1" }, // Selected driver avatar
+  upiId: { type: String, default: "driverpay@paytm" }, // Payout UPI ID VPA
   rating: { type: Number, default: 5.0 },              // Average star rating
   ratingCount: { type: Number, default: 0 }           // Total ratings submitted
 }, { timestamps: true });

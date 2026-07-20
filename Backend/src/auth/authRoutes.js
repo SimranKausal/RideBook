@@ -263,7 +263,7 @@ router.post('/driver/verify-otp', async (req, res) => {
 
 // 2. PUT Route to update Driver profile details
 router.put('/driver/update-profile', async (req, res) => {
-  const { driverId, fullname, email, vehicleDetails, profilePhoto } = req.body;
+  const { driverId, fullname, email, vehicleDetails, profilePhoto, upiId } = req.body;
   console.log(`\n👤 [Driver Profile Update] Updating details for Driver ID: ${driverId}`);
 
   if (!driverId || !fullname || !email || !vehicleDetails) {
@@ -274,14 +274,19 @@ router.put('/driver/update-profile', async (req, res) => {
   }
 
   try {
+    const updatePayload = {
+      fullname,
+      email,
+      vehicleDetails,
+      profilePhoto: profilePhoto || "avatar_1"
+    };
+    if (upiId !== undefined) {
+      updatePayload.upiId = upiId.trim();
+    }
+
     const updatedDriver = await Driver.findByIdAndUpdate(
       driverId,
-      {
-        fullname,
-        email,
-        vehicleDetails,
-        profilePhoto: profilePhoto || "avatar_1"
-      },
+      updatePayload,
       { new: true }
     );
 

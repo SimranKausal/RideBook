@@ -20,12 +20,20 @@ export default function DriverAccountScreen() {
   const [driverName, setDriverName] = useState('Amit Kumar');
   const [driverVehicle, setDriverVehicle] = useState('White Maruti Swift');
   const [driverRating, setDriverRating] = useState('4.88');
+  const [savedUpiId, setSavedUpiId] = useState('driverpay@paytm');
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [inputUpi, setInputUpi] = useState('');
   
   const driverId = "6a34d1819c65dd2c4eb29403"; // Dynamic test ID matching baseline driver
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        const localUpi = await AsyncStorage.getItem('driverUpiId');
+        if (localUpi) {
+          setSavedUpiId(localUpi);
+        }
+
         const response = await axios.get(`http://4.240.25.27:5000/api/auth/driver/profile/${driverId}`);
         if (response.data.success && response.data.driver) {
           const d = response.data.driver;
@@ -34,6 +42,9 @@ export default function DriverAccountScreen() {
             setDriverVehicle(`${d.vehicleDetails.color || 'White'} ${d.vehicleDetails.carModel || 'Swift'}`);
           }
           setDriverRating(d.rating || '4.88');
+          if (!localUpi && d.upiId) {
+            setSavedUpiId(d.upiId);
+          }
         }
       } catch (err) {
         console.log("Error fetching driver profile:", err.message);
@@ -41,6 +52,40 @@ export default function DriverAccountScreen() {
     };
     fetchProfile();
   }, []);
+
+  const handleSaveUpi = async () => {
+    if (!inputUpi.trim()) {
+      Alert.alert("Missing UPI ID", "Please type a valid UPI ID (e.g. yourname@paytm).");
+      return;
+    }
+
+    const cleanUpi = inputUpi.trim();
+    try {
+      await AsyncStorage.setItem('driverUpiId', cleanUpi);
+      setSavedUpiId(cleanUpi);
+
+      const localDriverId = await AsyncStorage.getItem('driverId') || driverId;
+      await axios.put(`http://4.240.25.27:5000/api/auth/driver/update-profile`, {
+        driverId: localDriverId,
+        fullname: driverName,
+        email: 'driver@velo.com',
+        vehicleDetails: {
+          carModel: 'Swift',
+          plateNumber: 'DL 3C AY 4412',
+          color: 'White'
+        },
+        upiId: cleanUpi
+      });
+
+      setShowUpiModal(false);
+      setInputUpi('');
+      Alert.alert("UPI ID Saved! ✅", `Your QR codes will now direct passenger payments to ${cleanUpi}.`);
+    } catch (err) {
+      console.log("Error saving UPI ID:", err.message);
+      Alert.alert("Saved Locally", `Your UPI ID has been set to ${cleanUpi}.`);
+      setShowUpiModal(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -141,6 +186,10 @@ export default function DriverAccountScreen() {
 
         {/* Settings options list */}
         <View style={styles.settingsList}>
+          <Pressable style={styles.settingRow} onPress={() => { setInputUpi(savedUpiId); setShowUpiModal(true); }}>
+            <Text style={styles.settingText}>📱 Payout UPI ID Settings ({savedUpiId})</Text>
+            <Text style={styles.arrowIcon}>›</Text>
+          </Pressable>
           <Pressable style={styles.settingRow} onPress={() => Alert.alert("Vehicle Info", `Compliant: ${driverVehicle}`)}>
             <Text style={styles.settingText}>🚗 Vehicle Registration</Text>
             <Text style={styles.arrowIcon}>›</Text>
@@ -156,6 +205,42 @@ export default function DriverAccountScreen() {
         </View>
 
       </ScrollView>
+
+      {/* 📱 PAYOUT UPI ID MODAL */}
+      <Modal visible={showUpiModal} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Payout UPI ID Settings 📱</Text>
+            <Text style={styles.modalDesc}>
+              Enter your personal UPI ID (Google Pay, PhonePe, Paytm) so passenger QR codes deposit money directly into your bank account:
+            </Text>
+
+            <Text style={{ fontSize: 11, color: '#94A3B8', fontWeight: '700', marginBottom: 4, alignSelf: 'flex-start', textTransform: 'uppercase' }}>
+              Current Receiving UPI ID:
+            </Text>
+            <Text style={{ fontSize: 16, color: '#38BDF8', fontWeight: '800', marginBottom: 16, alignSelf: 'flex-start' }}>
+              {savedUpiId}
+            </Text>
+
+            <TextInput
+              value={inputUpi}
+              onChangeText={setInputUpi}
+              placeholder="e.g. 9876543210@paytm or name@okicici"
+              placeholderTextColor="#64748B"
+              autoCapitalize="none"
+              style={styles.modalInput}
+            />
+
+            <Pressable style={styles.modalBtnPrimary} onPress={handleSaveUpi}>
+              <Text style={styles.modalBtnPrimaryText}>Save & Update UPI ID ✅</Text>
+            </Pressable>
+
+            <Pressable style={styles.modalBtnSecondary} onPress={() => setShowUpiModal(false)}>
+              <Text style={styles.modalBtnSecondaryText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       {/* 💳 1. WALLET/EARNINGS MODAL */}
       <Modal visible={showWalletModal} animationType="slide" transparent={true}>

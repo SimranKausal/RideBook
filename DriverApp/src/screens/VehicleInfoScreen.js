@@ -14,6 +14,7 @@ export default function VehicleInfoScreen({ route, navigation }) {
   const [carModel, setCarModel] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
   const [color, setColor] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -51,14 +52,18 @@ export default function VehicleInfoScreen({ route, navigation }) {
           plateNumber,
           color
         },
-        profilePhoto: profilePhoto || ""
+        profilePhoto: profilePhoto || "",
+        upiId: upiId ? upiId.trim() : "driverpay@paytm"
       });
 
       if (response.data.success) {
         Alert.alert('Profile Configured!', 'Your driver profile is active.');
         
-        // Save session locally
+        // Save session & UPI ID locally
         await AsyncStorage.setItem('driverId', driverId);
+        if (upiId) {
+          await AsyncStorage.setItem('driverUpiId', upiId.trim());
+        }
         
         navigation.replace('Dashboard', { driverId });
       }
@@ -142,6 +147,18 @@ export default function VehicleInfoScreen({ route, navigation }) {
             onChangeText={setColor}
             placeholder="White / Silver"
             placeholderTextColor="#64748B"
+          />
+
+          <Text style={styles.sectionHeader}>💳 Payout Banking Info</Text>
+
+          <Text style={styles.label}>Payout UPI ID (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            value={upiId}
+            onChangeText={setUpiId}
+            placeholder="yourname@paytm or 9876543210@ybl"
+            placeholderTextColor="#64748B"
+            autoCapitalize="none"
           />
 
           <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
