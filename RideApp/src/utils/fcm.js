@@ -10,29 +10,25 @@ export const registerFCMToken = async (customUserId = null) => {
       await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
     }
 
-    // 1. Request notification permissions from the OS
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    try {
+      await messaging().requestPermission();
+    } catch (e) {}
 
-    if (enabled) {
-      // 2. Fetch the unique device token from Firebase
-      const fcmToken = await messaging().getToken();
-      console.log('🔥 [FCM] Fetched device token:', fcmToken);
+    // 2. Fetch the unique device token from Firebase
+    const fcmToken = await messaging().getToken();
+    console.log('🔥 [FCM] Fetched device token:', fcmToken);
 
-      // 3. Find the logged-in user ID (fallback to baseline passenger ID if not logged in)
-      const storedUserId = await AsyncStorage.getItem('userId');
-      const userId = customUserId || storedUserId || "6a28fac827c86bf2fdbcd628";
-      
-      if (userId && fcmToken) {
-        // 4. Save token to MongoDB
-        await axios.post('http://4.240.25.27:5000/api/auth/update-fcm-token', {
-          userId,
-          fcmToken
-        });
-        console.log('💾 [FCM] Token synced to backend successfully for User:', userId);
-      }
+    // 3. Find the logged-in user ID (fallback to baseline passenger ID if not logged in)
+    const storedUserId = await AsyncStorage.getItem('userId');
+    const userId = customUserId || storedUserId || "6a28fac827c86bf2fdbcd628";
+    
+    if (userId && fcmToken) {
+      // 4. Save token to MongoDB
+      await axios.post('http://4.240.25.27:5000/api/auth/update-fcm-token', {
+        userId,
+        fcmToken
+      });
+      console.log('💾 [FCM] Token synced to backend successfully for User:', userId);
     }
   } catch (error) {
     console.log('❌ [FCM Registration Error]:', error.message);

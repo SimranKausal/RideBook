@@ -189,7 +189,8 @@ router.get('/profile/:userId', async (req, res) => {
       user: {
         fullname: user.fullname,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        fcmToken: user.fcmToken
       }
     });
   } catch (error) {
