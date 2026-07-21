@@ -8,8 +8,9 @@ let firebaseAdmin = null;
 if (fs.existsSync(serviceAccountPath)) {
   try {
     const serviceAccount = require(serviceAccountPath);
+    const cert = admin.cert || (admin.credential && admin.credential.cert);
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: cert(serviceAccount)
     });
     firebaseAdmin = admin;
     console.log("🔥 [Firebase] Admin SDK initialized successfully");
