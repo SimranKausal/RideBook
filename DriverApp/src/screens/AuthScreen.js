@@ -3,8 +3,11 @@ import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet, SafeAreaVie
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Connects to local Node server (re-routed in android simulator)
-const API_BASE_URL = 'http://4.240.25.27:5000/api/auth';
+import { API_URL } from '../config';
+
+// Connects to local or remote Node server dynamically
+const API_BASE_URL = `${API_URL}/api/auth`;
+
 
 export default function AuthScreen({ navigation }) {
   const [phoneNumber, setPhoneNumber] = useState('+91');

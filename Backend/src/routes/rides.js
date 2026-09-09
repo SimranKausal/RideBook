@@ -127,7 +127,7 @@ router.post('/request-ride', async (req, res) => {
     if (!isScheduled && io) {
       console.log(`📡 [Socket Engine] Broadcasting incoming trip booking request to driver network streams...`);
       
-      io.to('drivers-room').emit('incoming-ride-request', {
+      io.emit('incoming-ride-request', {
         rideId: newRide._id,
         passengerId: newRide.passengerId,
         pickup: newRide.pickupLocation,
@@ -262,17 +262,25 @@ router.post('/accept-ride', async (req, res) => {
 
   try {
     // 1. Find the ride request document
-    const ride = await Ride.findById(rideId);
-    if (!ride) return res.status(404).json({ success: false, message: "Ride not found" });
+   // 1. Find the driver profile first
+const driver = await Driver.findById(driverId);
+if (!driver) return res.status(404).json({ success: false, message: "Driver not found" });
 
-    // 2. Find the mock driver profile
-    const driver = await Driver.findById(driverId);
-    if (!driver) return res.status(404).json({ success: false, message: "Driver not found" });
+// 2. Atomically accept the ride ONLY if it's still SEARCHING.
+// This prevents two drivers from both accepting the same ride (race condition).
+const ride = await Ride.findOneAndUpdate(
+  { _id: rideId, status: 'SEARCHING' }, // condition: must still be searching
+  { status: 'ACCEPTED', driverId: driver._id }, // update to apply
+  { new: true } // return the UPDATED document, not the old one
+);
 
-    // 3. Update the state mapping rules
-    ride.status = 'ACCEPTED';
-    ride.driverId = driver._id;
-    await ride.save();
+// 3. If ride is null, it means another driver already grabbed it first
+if (!ride) {
+  return res.status(409).json({
+    success: false,
+    message: "This ride has already been accepted by another driver."
+  });
+}
 
     // 4. Temporarily flag driver status as unavailable on the map view
     driver.isAvailable = false;

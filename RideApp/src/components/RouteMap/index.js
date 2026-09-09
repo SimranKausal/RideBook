@@ -3,7 +3,10 @@ import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 
+import { API_URL } from '../../config';
+
 const GOOGLE_MAPS_APIKEY = 'AIzaSyD2E5vl6LGlNgEeocvrFGGSQwA4LWTbspE';
+
 
 const RouteMap = ({ origin, destination, waypoints, driverLocation }) => {
   const mapRef = useRef(null);
@@ -34,7 +37,8 @@ const RouteMap = ({ origin, destination, waypoints, driverLocation }) => {
   useEffect(() => {
     const fetchMapCars = async () => {
       try {
-        const response = await fetch('http://4.240.25.27:5000/api/rides/nearby-drivers');
+        const response = await fetch(`${API_URL}/api/rides/nearby-drivers`);
+
         const data = await response.json();
         
         if (data.success) {

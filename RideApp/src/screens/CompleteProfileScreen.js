@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { registerFCMToken } from '../utils/fcm';
+import { API_URL } from '../config';
 
-const API_BASE_URL = 'http://10.0.2.2:5000/api/auth'; 
+const API_BASE_URL = `${API_URL}/api/auth`; 
+
 
 export default function CompleteProfileScreen({ route, navigation }) {
   // Grab the userId passed from the AuthScreen after a successful login

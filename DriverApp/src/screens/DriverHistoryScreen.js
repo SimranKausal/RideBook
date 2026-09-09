@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config';
 
 export default function DriverHistoryScreen() {
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ export default function DriverHistoryScreen() {
           activeDriverId = "6a34d1819c65dd2c4eb29403";
         }
 
-        const response = await axios.get(`http://4.240.25.27:5000/api/rides/trips/history/${activeDriverId}`);
+        const response = await axios.get(`${API_URL}/api/rides/trips/history/${activeDriverId}`);
         if (response.data.success) {
           setTrips(response.data.trips);
         }

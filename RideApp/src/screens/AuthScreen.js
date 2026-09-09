@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import axios from 'axios'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { registerFCMToken } from '../utils/fcm';
+import { API_URL } from '../config';
 
-// Using the 10.0.2.2 mapping so the Android Emulator routes to your computer's local port 5000
-const API_BASE_URL = 'http://4.240.25.27:5000/api/auth'; 
+const API_BASE_URL = `${API_URL}/api/auth`; 
+
 
 export default function AuthScreen({ navigation }) {
   const [phoneNumber, setPhoneNumber] = useState('+91');

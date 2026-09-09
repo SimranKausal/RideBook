@@ -4,6 +4,8 @@ const axios = require('axios');
 const User = require('../models/user'); 
 const Driver = require('../models/Driver');
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY; 
+const Ride = require('../models/ride');
+
 
 // POST Route to send OTP
 
@@ -342,7 +344,7 @@ router.put('/driver/update-location', async (req, res) => {
 
     // 📡 Live ETA & Distance Broadcast Layer
     if (latitude !== undefined && longitude !== undefined) {
-      const Ride = mongoose.model('Ride');
+     
       const activeRide = await Ride.findOne({
         driverId: driverId,
         status: { $in: ['ACCEPTED', 'ON_TRIP'] }

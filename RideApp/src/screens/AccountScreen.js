@@ -4,7 +4,10 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
+import { API_URL } from '../config';
+
 const { width } = Dimensions.get('window');
+
 
 export default function AccountScreen() {
   const navigation = useNavigation();
@@ -23,7 +26,8 @@ export default function AccountScreen() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`http://4.240.25.27:5000/api/auth/profile/${passengerId}`);
+        const response = await axios.get(`${API_URL}/auth/profile/${passengerId}`);
+
         if (response.data.success && response.data.user) {
           setUserName(response.data.user.fullname || 'Simran Kaushal');
         }

@@ -4,7 +4,10 @@ import axios from 'axios';
 import { launchImageLibrary } from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://4.240.25.27:5000/api/auth';
+import { API_URL } from '../config';
+
+const API_BASE_URL = `${API_URL}/api/auth`;
+
 
 export default function VehicleInfoScreen({ route, navigation }) {
   const { driverId } = route.params || {};

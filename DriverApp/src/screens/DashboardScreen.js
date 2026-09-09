@@ -4,9 +4,11 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { API_URL, SOCKET_URL } from '../config';
 
 const { width, height } = Dimensions.get('window');
-const API_BASE_URL = 'http://4.240.25.27:5000/api';
+const API_BASE_URL = `${API_URL}/api`;
+
 
 export default function DashboardScreen({ route }) {
   const { driverId } = route.params || { driverId: "6a34d1819c65dd2c4eb29403" }; // Amit Kumar dummy backup ID
@@ -81,7 +83,7 @@ export default function DashboardScreen({ route }) {
 
   // 1. WebSocket connection setup
   useEffect(() => {
-    socketRef.current = io('http://4.240.25.27:5000');
+    socketRef.current = io(SOCKET_URL);
 
     socketRef.current.on('connect', () => {
       console.log('📡 [Driver Socket] Connected to system gateway.');
@@ -93,7 +95,7 @@ export default function DashboardScreen({ route }) {
     // 📡 Socket Listener: Incoming Ride Request
     socketRef.current.on('incoming-ride-request', (data) => {
       // Only show request popup if driver is online and not currently on another ride
-      if (isOnline && !activeRide && !incomingRide) {
+      if (isOnlineRef.current && !activeRide && !incomingRide) {
         console.log("🚖 [Socket Event] Incoming ride request received:", data.rideId);
         setIncomingRide(data);
         setCountdown(15);

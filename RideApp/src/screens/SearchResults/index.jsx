@@ -4,6 +4,7 @@ import UberTypes from "../../components/UberTypes";
 import RouteMap from "../../components/RouteMap";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { io } from 'socket.io-client'; // 📡 Import Socket client
+import { API_URL, SOCKET_URL } from '../../config';
 
 // 🇮🇳 Smart baseline local coordinates to prevent structural layout calculation freezes
 const DEFAULT_LAT = 28.6284;
@@ -60,7 +61,7 @@ const SearchResults = () => {
 
   // 📡 Socket.io Listener Hook
   useEffect(() => {
-    socketRef.current = io('http://4.240.25.27:5000');
+    socketRef.current = io(SOCKET_URL);
     const socket = socketRef.current;
 
     if (currentRideId) {
@@ -118,7 +119,7 @@ const SearchResults = () => {
     if (!currentRideId) return;
 
     try {
-      const response = await fetch('http://4.240.25.27:5000/api/rides/accept-ride', {
+      const response = await fetch(`${API_URL}/api/rides/accept-ride`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +166,7 @@ const SearchResults = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await fetch('http://4.240.25.27:5000/api/rides/cancel-ride', {
+              const response = await fetch(`${API_URL}/api/rides/cancel-ride`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -205,7 +206,7 @@ const SearchResults = () => {
     }
 
     try {
-      const response = await fetch('http://4.240.25.27:5000/api/rides/request-ride', {
+      const response = await fetch(`${API_URL}/api/rides/request-ride`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -241,7 +242,7 @@ const SearchResults = () => {
   // Submits 1-5 star review to backend rate-driver endpoint
   const handleSubmitRating = async () => {
     try {
-      const response = await fetch('http://4.240.25.27:5000/api/rides/rate-driver', {
+      const response = await fetch(`${API_URL}/api/rides/rate-driver`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

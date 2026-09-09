@@ -2,6 +2,7 @@ import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 export const registerFCMToken = async (customUserId = null) => {
   try {
@@ -24,10 +25,11 @@ export const registerFCMToken = async (customUserId = null) => {
     
     if (userId && fcmToken) {
       // 4. Save token to MongoDB
-      await axios.post('http://4.240.25.27:5000/api/auth/update-fcm-token', {
+      await axios.post(`${API_URL}/api/auth/update-fcm-token`, {
         userId,
         fcmToken
       });
+
       console.log('💾 [FCM] Token synced to backend successfully for User:', userId);
     }
   } catch (error) {

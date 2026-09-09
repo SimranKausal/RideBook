@@ -4,6 +4,7 @@ import UberTypeRow from '../UberTypeRow'
 import typesdata from "../../assets/data/types"
 import axios from 'axios'
 import RazorpayCheckout from 'react-native-razorpay'
+import { API_URL } from '../../config'
 
 // 📐 1. Haversine Formula (Dynamic layout)
 const calculateHaversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -83,7 +84,7 @@ const UberTypes = (props) => {
     const currentEstimate = getFrontendEstimate(selectedType, props.pickupLocation, props.dropoffLocation, props.stopLocation);
 
     try {
-      const response = await axios.post('http://4.240.25.27:5000/api/rides/validate-promo', {
+      const response = await axios.post(`${API_URL}/api/rides/validate-promo`, {
         promoCode: promoText,
         fare: currentEstimate
       });
@@ -116,7 +117,7 @@ const UberTypes = (props) => {
 
     try {
       console.log(`🚖 Requesting allocation for: ${selectedType} (Payment: ${paymentMethod})`);
-      const response = await axios.post('http://4.240.25.27:5000/api/rides/request-ride', ridePayload);
+      const response = await axios.post(`${API_URL}/api/rides/request-ride`, ridePayload);
 
       if (response.data.success) {
         const { ride, driver } = response.data; 
@@ -166,7 +167,7 @@ const UberTypes = (props) => {
       try {
         console.log(`💳 [Billing Engine] Initializing online order for ₹${finalFare}`);
         // Step 1: Hit backend to create Razorpay Order
-        const orderResponse = await axios.post('http://4.240.25.27:5000/api/payments/create-order', {
+        const orderResponse = await axios.post(`${API_URL}/api/payments/create-order`, {
           amount: finalFare
         });
 
@@ -184,7 +185,7 @@ const UberTypes = (props) => {
                   onPress: async () => {
                     setIsSearching(true);
                     try {
-                      const verifyResponse = await axios.post('http://4.240.25.27:5000/api/payments/verify-payment', {
+                      const verifyResponse = await axios.post(`${API_URL}/api/payments/verify-payment`, {
                         razorpay_order_id: orderId,
                         razorpay_payment_id: `pay_mock_${Date.now()}`
                       });
@@ -234,7 +235,7 @@ const UberTypes = (props) => {
             
             // Step 3: Verify signature on server
             try {
-              const verifyResponse = await axios.post('http://4.240.25.27:5000/api/payments/verify-payment', {
+              const verifyResponse = await axios.post(`${API_URL}/api/payments/verify-payment`, {
                 razorpay_order_id: data.razorpay_order_id,
                 razorpay_payment_id: data.razorpay_payment_id,
                 razorpay_signature: data.razorpay_signature
@@ -256,7 +257,7 @@ const UberTypes = (props) => {
             if (orderId && orderId.startsWith('order_mock_')) {
               console.log("ℹ️ [Mock Mode] Bypassing Razorpay Checkout sheet crash for test order");
               try {
-                const verifyResponse = await axios.post('http://4.240.25.27:5000/api/payments/verify-payment', {
+                const verifyResponse = await axios.post(`${API_URL}/api/payments/verify-payment`, {
                   razorpay_order_id: orderId,
                   razorpay_payment_id: `pay_mock_${Date.now()}`
                 });

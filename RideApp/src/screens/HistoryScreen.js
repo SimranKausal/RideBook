@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import { API_URL } from '../config';
 
 export default function HistoryScreen() {
   const navigation = useNavigation();
@@ -14,7 +14,8 @@ export default function HistoryScreen() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get(`http://4.240.25.27:5000/api/rides/trips/history/${passengerId}`);
+        const response = await axios.get(`${API_URL}/api/rides/trips/history/${passengerId}`);
+
         if (response.data.success) {
           setTrips(response.data.trips);
         }
